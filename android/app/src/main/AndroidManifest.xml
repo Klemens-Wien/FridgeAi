@@ -1,11 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- Claude API requests. Camera and gallery go through system intents
+         (image_picker), so no camera or storage permission is needed. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
-        android:label="fridgeai"
+        android:label="FridgeChef"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
