@@ -81,7 +81,7 @@ class MoreScreen extends StatelessWidget {
             onTap: () => showAboutDialog(
               context: context,
               applicationName: s.appName,
-              applicationVersion: '1.0.0',
+              applicationVersion: '1.1.0',
               applicationIcon: const Icon(Icons.kitchen, size: 40),
               children: [Text(s.aboutBody), const SizedBox(height: 12), Text(s.aiDisclaimer)],
             ),
