@@ -509,6 +509,76 @@ class StringsEn extends S {
       'Add to shopping list';
 
   @override
+  String get calorieCounter =>
+      'Calorie counter';
+  @override
+  String get dailyGoal =>
+      'Daily goal';
+  @override
+  String get kcalEaten =>
+      'eaten';
+  @override
+  String get kcalLeft =>
+      'left';
+  @override
+  String get kcalOver =>
+      'over goal';
+  @override
+  String get addEntry =>
+      'Add entry';
+  @override
+  String get newEntry =>
+      'Log a meal';
+  @override
+  String get entryName =>
+      'What did you eat?';
+  @override
+  String get entryNameHint =>
+      'e.g. cheese sandwich and an apple';
+  @override
+  String get kcalRequired =>
+      'Please enter calories';
+  @override
+  String get estimateWithAi =>
+      'Estimate with AI';
+  @override
+  String get estimating =>
+      'Estimating nutrition …';
+  @override
+  String get estimateFailed =>
+      'The AI could not tell what this is. Please describe the meal in more detail.';
+  @override
+  String get estimateNeedsInput =>
+      'Describe the meal or add a photo.';
+  @override
+  String get addPhoto =>
+      'Photo';
+  @override
+  String get photoAdded =>
+      'Photo added';
+  @override
+  String get diaryEmpty =>
+      'Nothing logged for this day yet.';
+  @override
+  String get last7Days =>
+      'Last 7 days';
+  @override
+  String get logAsEaten =>
+      'Log as eaten';
+  @override
+  String get portionsEaten =>
+      'How many servings did you eat?';
+  @override
+  String get loggedToDiary =>
+      'Added to the calorie counter';
+  @override
+  String get estimatedValue =>
+      'estimated';
+  @override
+  String get calorieDisclaimer =>
+      'Values are estimates and do not replace nutritional advice.';
+
+  @override
   String get errorTitle => 'Something went wrong';
   @override
   String errorMessage(ClaudeErrorKind kind) => switch (kind) {

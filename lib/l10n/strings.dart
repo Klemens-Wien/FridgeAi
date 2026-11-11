@@ -257,6 +257,31 @@ abstract class S {
   String get noSubstitutes;
   String get addToShopping;
 
+  // Calorie counter
+  String get calorieCounter;
+  String get dailyGoal;
+  String get kcalEaten;
+  String get kcalLeft;
+  String get kcalOver;
+  String get addEntry;
+  String get newEntry;
+  String get entryName;
+  String get entryNameHint;
+  String get kcalRequired;
+  String get estimateWithAi;
+  String get estimating;
+  String get estimateFailed;
+  String get estimateNeedsInput;
+  String get addPhoto;
+  String get photoAdded;
+  String get diaryEmpty;
+  String get last7Days;
+  String get logAsEaten;
+  String get portionsEaten;
+  String get loggedToDiary;
+  String get estimatedValue;
+  String get calorieDisclaimer;
+
   // Errors
   String get errorTitle;
   String errorMessage(ClaudeErrorKind kind);

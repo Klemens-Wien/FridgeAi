@@ -110,6 +110,14 @@ final sampleIngredients = {
   ],
 };
 
+final sampleMealEstimate = {
+  'name': 'Käsebrot mit Apfel',
+  'calories': 420,
+  'proteinG': 16,
+  'carbsG': 48,
+  'fatG': 17,
+};
+
 final sampleSubstitutes = {
   'substitutes': [
     {'name': 'Eier', 'note': 'Macht das Omelett fester.', 'pantryItem': 'Eier'},
@@ -129,6 +137,7 @@ class FakeClaude {
     final schema = body['output_config']['format']['schema'] as Map;
     final props = schema['properties'] as Map;
     if (props.containsKey('substitutes')) return messageResponse(sampleSubstitutes);
+    if (props.containsKey('calories')) return messageResponse(sampleMealEstimate);
     return messageResponse(
       props.containsKey('recipes') ? sampleRecipes : sampleIngredients,
     );

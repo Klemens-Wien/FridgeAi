@@ -513,6 +513,76 @@ class StringsDe extends S {
       'Auf die Einkaufsliste';
 
   @override
+  String get calorieCounter =>
+      'Kalorienzähler';
+  @override
+  String get dailyGoal =>
+      'Tagesziel';
+  @override
+  String get kcalEaten =>
+      'gegessen';
+  @override
+  String get kcalLeft =>
+      'übrig';
+  @override
+  String get kcalOver =>
+      'über dem Ziel';
+  @override
+  String get addEntry =>
+      'Eintrag';
+  @override
+  String get newEntry =>
+      'Mahlzeit eintragen';
+  @override
+  String get entryName =>
+      'Was hast du gegessen?';
+  @override
+  String get entryNameHint =>
+      'z. B. Käsebrot und ein Apfel';
+  @override
+  String get kcalRequired =>
+      'Bitte Kalorien eingeben';
+  @override
+  String get estimateWithAi =>
+      'Mit KI schätzen';
+  @override
+  String get estimating =>
+      'Schätze Nährwerte …';
+  @override
+  String get estimateFailed =>
+      'Das konnte die KI nicht erkennen. Beschreibe die Mahlzeit etwas genauer.';
+  @override
+  String get estimateNeedsInput =>
+      'Beschreibe die Mahlzeit oder füge ein Foto hinzu.';
+  @override
+  String get addPhoto =>
+      'Foto';
+  @override
+  String get photoAdded =>
+      'Foto hinzugefügt';
+  @override
+  String get diaryEmpty =>
+      'Für diesen Tag ist noch nichts eingetragen.';
+  @override
+  String get last7Days =>
+      'Letzte 7 Tage';
+  @override
+  String get logAsEaten =>
+      'Als gegessen eintragen';
+  @override
+  String get portionsEaten =>
+      'Wie viele Portionen hast du gegessen?';
+  @override
+  String get loggedToDiary =>
+      'Im Kalorienzähler eingetragen';
+  @override
+  String get estimatedValue =>
+      'geschätzt';
+  @override
+  String get calorieDisclaimer =>
+      'Die Werte sind Schätzungen und ersetzen keine Ernährungsberatung.';
+
+  @override
   String get errorTitle => 'Das hat nicht geklappt';
   @override
   String errorMessage(ClaudeErrorKind kind) => switch (kind) {

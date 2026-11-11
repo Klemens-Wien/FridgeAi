@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/strings.dart';
+import '../../state/food_log_store.dart';
 import '../../state/recipe_store.dart';
+import '../calories/calorie_screen.dart';
 import 'recipe_list_screen.dart';
 import 'settings_screen.dart';
 
@@ -13,6 +15,7 @@ class MoreScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final store = context.watch<RecipeStore>();
+    final log = context.watch<FoodLogStore>();
     void push(Widget w) =>
         Navigator.push(context, MaterialPageRoute(builder: (_) => w));
 
@@ -32,10 +35,8 @@ class MoreScreen extends StatelessWidget {
                     Text(
                       s.statsTitle,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer,
-                          ),
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -56,6 +57,14 @@ class MoreScreen extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.local_fire_department_outlined),
+            title: Text(s.calorieCounter),
+            trailing: Text(
+              '${log.totalsFor(DateTime.now()).calories.round()} / ${log.goal} kcal',
+            ),
+            onTap: () => push(const CalorieScreen()),
           ),
           ListTile(
             leading: const Icon(Icons.favorite_outline),
@@ -81,9 +90,13 @@ class MoreScreen extends StatelessWidget {
             onTap: () => showAboutDialog(
               context: context,
               applicationName: s.appName,
-              applicationVersion: '1.1.0',
+              applicationVersion: '1.2.0',
               applicationIcon: const Icon(Icons.kitchen, size: 40),
-              children: [Text(s.aboutBody), const SizedBox(height: 12), Text(s.aiDisclaimer)],
+              children: [
+                Text(s.aboutBody),
+                const SizedBox(height: 12),
+                Text(s.aiDisclaimer),
+              ],
             ),
           ),
         ],

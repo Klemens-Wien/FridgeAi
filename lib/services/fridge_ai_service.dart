@@ -417,6 +417,95 @@ FridgeChef app. Suggest up to 4 realistic substitutes, best first.
         .where((s) => s.name.isNotEmpty)
         .toList();
   }
+
+  // ---------------------------------------------------------------------------
+  // Meal calorie estimate (calorie diary)
+  // ---------------------------------------------------------------------------
+
+  static final Map<String, dynamic> mealEstimateSchema = {
+    'type': 'object',
+    'properties': {
+      'name': {'type': 'string'},
+      'calories': {'type': 'number'},
+      'proteinG': {'type': 'number'},
+      'carbsG': {'type': 'number'},
+      'fatG': {'type': 'number'},
+    },
+    'required': ['name', 'calories', 'proteinG', 'carbsG', 'fatG'],
+    'additionalProperties': false,
+  };
+
+  static String mealEstimateSystemPrompt(String languageCode) => '''
+You estimate the energy content of a meal for the calorie diary in the
+FridgeChef app. The user describes what they ate and/or sends a photo of
+the plate.
+
+- Estimate what was actually eaten: the whole portion shown or described,
+  not a value per 100 g. If the amount is unclear, assume a typical
+  single serving.
+- "calories" in kcal, macros in grams, all for the whole portion. Round
+  sensibly; these are estimates and the app labels them as such.
+- "name" is a short label for the diary entry (at most 5 words), in
+  ${_languageName(languageCode)}.
+- If you cannot tell at all what the food is, return name "" and zeros.
+''';
+
+  /// Estimates calories and macros of a meal from a description, a photo,
+  /// or both. Returns null if the model could not identify the food.
+  Future<MealEstimate?> estimateMeal({
+    String description = '',
+    Uint8List? photo,
+    required String languageCode,
+  }) async {
+    final content = <Map<String, dynamic>>[
+      if (photo != null)
+        ClaudeClient.imageBlock(detectImageMediaType(photo), base64Encode(photo)),
+      ClaudeClient.textBlock(
+        description.trim().isEmpty
+            ? 'Estimate the meal in the photo.'
+            : 'What I ate: ${description.trim()}',
+      ),
+    ];
+    final json = await client.createJson(
+      system: mealEstimateSystemPrompt(languageCode),
+      content: content,
+      schema: mealEstimateSchema,
+      effort: 'low',
+    );
+    final estimate = MealEstimate.fromJson(json);
+    return estimate.name.isEmpty && estimate.calories <= 0 ? null : estimate;
+  }
+}
+
+class MealEstimate {
+  const MealEstimate({
+    required this.name,
+    required this.calories,
+    this.proteinG = 0,
+    this.carbsG = 0,
+    this.fatG = 0,
+  });
+
+  final String name;
+  final double calories;
+  final double proteinG;
+  final double carbsG;
+  final double fatG;
+
+  factory MealEstimate.fromJson(Map<String, dynamic> json) {
+    double d(String k) {
+      final v = (json[k] as num?)?.toDouble() ?? 0;
+      return v.isFinite && v > 0 ? v : 0;
+    }
+
+    return MealEstimate(
+      name: (json['name'] as String? ?? '').trim(),
+      calories: d('calories'),
+      proteinG: d('proteinG'),
+      carbsG: d('carbsG'),
+      fatG: d('fatG'),
+    );
+  }
 }
 
 class Substitute {

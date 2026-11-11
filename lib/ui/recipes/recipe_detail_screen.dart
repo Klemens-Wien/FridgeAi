@@ -8,8 +8,10 @@ import '../../l10n/strings.dart';
 import '../../logic/recipe_ranking.dart';
 import '../../logic/scaling.dart';
 import '../../logic/share_text.dart';
+import '../../models/food_log.dart';
 import '../../models/recipe.dart';
 import '../../models/shopping_item.dart';
+import '../../state/food_log_store.dart';
 import '../../state/pantry_store.dart';
 import '../../services/claude_client.dart';
 import '../../services/fridge_ai_service.dart';
@@ -25,15 +27,16 @@ List<ShoppingItem> shoppingItemsFor(
   Recipe recipe,
   Iterable<RecipeIngredient> ingredients,
   int servings,
-) =>
-    ingredients
-        .map((i) => ShoppingItem(
-              name: i.name,
-              amount: scaleAmount(i.amount, recipe.servings, servings),
-              unit: i.unit,
-              recipeTitle: recipe.title,
-            ))
-        .toList();
+) => ingredients
+    .map(
+      (i) => ShoppingItem(
+        name: i.name,
+        amount: scaleAmount(i.amount, recipe.servings, servings),
+        unit: i.unit,
+        recipeTitle: recipe.title,
+      ),
+    )
+    .toList();
 
 class RecipeDetailScreen extends StatefulWidget {
   const RecipeDetailScreen({super.key, required this.recipe, this.servings});
@@ -65,15 +68,87 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     final s = context.s;
     final shopping = context.read<ShoppingStore>();
     final missing = match.missing.where((i) => !shopping.contains(i.name));
-    final n = await shopping.addAll(shoppingItemsFor(recipe, missing, _servings));
+    final n = await shopping.addAll(
+      shoppingItemsFor(recipe, missing, _servings),
+    );
     if (mounted) showSnack(context, s.addedToShopping(n));
+  }
+
+  /// Asks how many servings were eaten and adds them to the calorie diary.
+  Future<void> _logAsEaten() async {
+    final s = context.s;
+    final log = context.read<FoodLogStore>();
+    var portions = 1.0;
+    final result = await showDialog<double>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: Text(s.logAsEaten),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(s.portionsEaten),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: portions > 0.5
+                        ? () => setLocal(() => portions -= 0.5)
+                        : null,
+                    icon: const Icon(Icons.remove),
+                  ),
+                  Text(
+                    formatAmount(portions, s.languageCode),
+                    style: Theme.of(ctx).textTheme.headlineSmall,
+                  ),
+                  IconButton(
+                    onPressed: portions < 10
+                        ? () => setLocal(() => portions += 0.5)
+                        : null,
+                    icon: const Icon(Icons.add),
+                  ),
+                ],
+              ),
+              Text(
+                '≈ ${(recipe.nutrition.calories * portions).round()} kcal',
+                style: Theme.of(ctx).textTheme.titleMedium,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(s.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, portions),
+              child: Text(s.add),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (result == null) return;
+    final n = recipe.nutrition * result;
+    await log.add(
+      FoodLogEntry(
+        name: recipe.title,
+        calories: n.calories,
+        proteinG: n.proteinG,
+        carbsG: n.carbsG,
+        fatG: n.fatG,
+        estimated: true,
+      ),
+    );
+    if (mounted) showSnack(context, s.loggedToDiary);
   }
 
   Future<void> _addOne(RecipeIngredient ing) async {
     final s = context.s;
-    await context
-        .read<ShoppingStore>()
-        .addAll(shoppingItemsFor(recipe, [ing], _servings));
+    await context.read<ShoppingStore>().addAll(
+      shoppingItemsFor(recipe, [ing], _servings),
+    );
     if (mounted) showSnack(context, s.addedOneToShopping);
   }
 
@@ -87,8 +162,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     final recipes = context.watch<RecipeStore>();
     final isFav = recipes.isFavorite(recipe.id);
     final match = RecipeRanker(pantry.items).match(recipe);
-    final missingNotOnList =
-        match.missing.where((i) => !shopping.contains(i.name)).toList();
+    final missingNotOnList = match.missing
+        .where((i) => !shopping.contains(i.name))
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -97,16 +173,17 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             tooltip: s.copyRecipe,
             icon: const Icon(Icons.copy_outlined),
             onPressed: () async {
-              await Clipboard.setData(ClipboardData(
-                text: recipeShareText(recipe, _servings, s),
-              ));
+              await Clipboard.setData(
+                ClipboardData(text: recipeShareText(recipe, _servings, s)),
+              );
               if (context.mounted) showSnack(context, s.copied);
             },
           ),
           IconButton(
             tooltip: s.addToPlan,
             icon: const Icon(Icons.event_available_outlined),
-            onPressed: () => showAddToPlanSheet(context, recipe, servings: _servings),
+            onPressed: () =>
+                showAddToPlanSheet(context, recipe, servings: _servings),
           ),
           IconButton(
             tooltip: s.favorites,
@@ -126,7 +203,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
           : SafeArea(
               minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: FilledButton.icon(
-                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                ),
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -146,7 +225,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             const SizedBox(height: 8),
             Text(
               recipe.description,
-              style: theme.textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
             ),
           ],
           const SizedBox(height: 12),
@@ -158,7 +239,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
           // Ingredients + portion calculator
           Row(
             children: [
-              Expanded(child: Text(s.ingredients, style: theme.textTheme.titleLarge)),
+              Expanded(
+                child: Text(s.ingredients, style: theme.textTheme.titleLarge),
+              ),
               _ServingsStepper(
                 value: _servings,
                 onChanged: (v) => setState(() => _servings = v),
@@ -183,17 +266,17 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     onAdd: () => _addOne(ing),
                     onTap: match.missing.contains(ing)
                         ? () => showModalBottomSheet<void>(
-                              context: context,
-                              showDragHandle: true,
-                              isScrollControlled: true,
-                              builder: (_) => _MissingSheet(
-                                recipe: recipe,
-                                ingredient: ing,
-                                onAdd: shopping.contains(ing.name)
-                                    ? null
-                                    : () => _addOne(ing),
-                              ),
-                            )
+                            context: context,
+                            showDragHandle: true,
+                            isScrollControlled: true,
+                            builder: (_) => _MissingSheet(
+                              recipe: recipe,
+                              ingredient: ing,
+                              onAdd: shopping.contains(ing.name)
+                                  ? null
+                                  : () => _addOne(ing),
+                            ),
+                          )
                         : null,
                   ),
               ],
@@ -215,6 +298,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             servings: _servings,
             showTotal: _showTotalNutrition,
             onToggle: (v) => setState(() => _showTotalNutrition = v),
+            onLog: _logAsEaten,
           ),
           const SizedBox(height: 24),
 
@@ -244,18 +328,26 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(recipe.steps[i].text, style: theme.textTheme.bodyLarge),
+                        Text(
+                          recipe.steps[i].text,
+                          style: theme.textTheme.bodyLarge,
+                        ),
                         if (recipe.steps[i].timerSeconds > 0)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
                             child: Row(
                               children: [
-                                Icon(Icons.timer_outlined, size: 16, color: scheme.primary),
+                                Icon(
+                                  Icons.timer_outlined,
+                                  size: 16,
+                                  color: scheme.primary,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   formatDuration(recipe.steps[i].timerSeconds),
-                                  style: theme.textTheme.labelMedium
-                                      ?.copyWith(color: scheme.primary),
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: scheme.primary,
+                                  ),
                                 ),
                               ],
                             ),
@@ -269,7 +361,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
           const SizedBox(height: 8),
           Text(
             s.aiDisclaimer,
-            style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -286,17 +380,18 @@ class _TimesRow extends StatelessWidget {
     final s = context.s;
     final theme = Theme.of(context);
     Widget cell(String label, int minutes) => Expanded(
-          child: Column(
-            children: [
-              Text(s.minutes(minutes), style: theme.textTheme.titleMedium),
-              Text(
-                label,
-                style: theme.textTheme.labelSmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              ),
-            ],
+      child: Column(
+        children: [
+          Text(s.minutes(minutes), style: theme.textTheme.titleMedium),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-        );
+        ],
+      ),
+    );
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -377,13 +472,16 @@ class _IngredientRow extends StatelessWidget {
     final (IconData icon, Color color, String status) = available
         ? (Icons.check_circle, scheme.success, s.inPantry)
         : ingredient.isStaple
-            ? (Icons.radio_button_unchecked, scheme.onSurfaceVariant, s.staple)
-            : (Icons.cancel_outlined, scheme.error, s.missing);
+        ? (Icons.radio_button_unchecked, scheme.onSurfaceVariant, s.staple)
+        : (Icons.cancel_outlined, scheme.error, s.missing);
 
     return ListTile(
       dense: true,
       onTap: onTap,
-      leading: Tooltip(message: status, child: Icon(icon, color: color)),
+      leading: Tooltip(
+        message: status,
+        child: Icon(icon, color: color),
+      ),
       title: Text(ingredient.name),
       subtitle: Text(status, style: TextStyle(color: color)),
       trailing: Row(
@@ -397,7 +495,11 @@ class _IngredientRow extends StatelessWidget {
                     padding: const EdgeInsets.only(left: 8),
                     child: Tooltip(
                       message: s.onShoppingList,
-                      child: Icon(Icons.shopping_cart, color: scheme.primary, size: 20),
+                      child: Icon(
+                        Icons.shopping_cart,
+                        color: scheme.primary,
+                        size: 20,
+                      ),
                     ),
                   )
                 : IconButton(
@@ -417,7 +519,10 @@ class _NutritionCard extends StatelessWidget {
     required this.servings,
     required this.showTotal,
     required this.onToggle,
+    required this.onLog,
   });
+
+  final VoidCallback onLog;
 
   final Nutrition nutrition;
   final int servings;
@@ -433,16 +538,20 @@ class _NutritionCard extends StatelessWidget {
     final fmt = NumberFormat('0', s.languageCode);
 
     Widget macro(String label, double grams, Color color) => Expanded(
-          child: Column(
-            children: [
-              Text('${fmt.format(grams)} g', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 2),
-              Container(height: 3, width: 28, color: color),
-              const SizedBox(height: 4),
-              Text(label, style: theme.textTheme.labelSmall, textAlign: TextAlign.center),
-            ],
+      child: Column(
+        children: [
+          Text('${fmt.format(grams)} g', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 2),
+          Container(height: 3, width: 28, color: color),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall,
+            textAlign: TextAlign.center,
           ),
-        );
+        ],
+      ),
+    );
 
     return Card(
       child: Padding(
@@ -455,15 +564,19 @@ class _NutritionCard extends StatelessWidget {
                 Text(s.nutrition, style: theme.textTheme.titleLarge),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: scheme.tertiaryContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     s.nutritionEstimate,
-                    style: theme.textTheme.labelSmall
-                        ?.copyWith(color: scheme.onTertiaryContainer),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.onTertiaryContainer,
+                    ),
                   ),
                 ),
               ],
@@ -493,17 +606,31 @@ class _NutritionCard extends StatelessWidget {
                 macro(s.fiber, n.fiberG, Colors.green),
               ],
             ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onLog,
+                icon: const Icon(Icons.local_fire_department_outlined),
+                label: Text(s.logAsEaten),
+              ),
+            ),
             const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, size: 16, color: scheme.onSurfaceVariant),
+                Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: scheme.onSurfaceVariant,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     s.nutritionEstimateNote,
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: scheme.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],
@@ -561,8 +688,12 @@ class _MissingSheetState extends State<_MissingSheet> {
       if (mounted) setState(() => _error = e);
     } catch (e) {
       if (mounted) {
-        setState(() => _error =
-            ClaudeException(ClaudeErrorKind.badResponse, e.toString()));
+        setState(
+          () => _error = ClaudeException(
+            ClaudeErrorKind.badResponse,
+            e.toString(),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);

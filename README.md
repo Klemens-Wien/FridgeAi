@@ -23,6 +23,7 @@ Flutter-App für **iOS und Android**: Kühlschrank fotografieren, die KI (Claude
 | **Vorrat-Suche & Gruppierung** | Suchfeld ab 7 Einträgen, optional nach Kategorie gruppiert. |
 | **Kopieren/Teilen** | Rezept (mit skalierten Mengen) und Einkaufsliste als Text in die Zwischenablage. |
 | **Bilanz** | Zählt gekochte Gerichte und gerettete (bald ablaufende) Lebensmittel. |
+| **Kalorienzähler** | Tagebuch mit Tagesziel, Makros und 7-Tage-Übersicht. Einträge aus einem Rezept („Als gegessen eintragen“), von Hand oder per KI-Schätzung aus Beschreibung/Foto. |
 | **Darstellung** | Hell, Dunkel oder System (Material 3). Deutsch und Englisch (oder Systemsprache) – auch die KI antwortet in der gewählten Sprache. |
 
 Alle Daten bleiben lokal auf dem Gerät (SharedPreferences). Der API-Schlüssel liegt verschlüsselt im Keychain/Keystore.

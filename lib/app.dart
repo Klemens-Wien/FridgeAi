@@ -6,6 +6,7 @@ import 'l10n/strings.dart';
 import 'services/claude_client.dart';
 import 'services/fridge_ai_service.dart';
 import 'services/storage.dart';
+import 'state/food_log_store.dart';
 import 'state/meal_plan_store.dart';
 import 'state/pantry_store.dart';
 import 'state/recipe_store.dart';
@@ -50,6 +51,7 @@ class FridgeChefApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => RecipeStore(store, aiFactory)),
         ChangeNotifierProvider(create: (_) => ShoppingStore(store)),
         ChangeNotifierProvider(create: (_) => MealPlanStore(store)),
+        ChangeNotifierProvider(create: (_) => FoodLogStore(store)),
         ChangeNotifierProvider(create: (_) => TabNavigator()),
         Provider<AiServiceFactory>.value(value: aiFactory),
       ],
