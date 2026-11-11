@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:http/http.dart' as http;
 
 import '../config.dart';
+import 'ai_backend.dart';
 
 enum ClaudeErrorKind {
   missingApiKey,
@@ -18,6 +19,9 @@ enum ClaudeErrorKind {
   truncated,
   badResponse,
   badRequest,
+
+  /// The viewer did not allow the page to use Claude (web build on claude.ai).
+  notAllowed,
 }
 
 class ClaudeException implements Exception {
@@ -35,7 +39,7 @@ class ClaudeException implements Exception {
 /// Dart has no official Anthropic SDK, so this talks to `POST /v1/messages`
 /// directly over HTTPS. Only the features FridgeChef needs are covered:
 /// image + text input, JSON structured outputs and effort control.
-class ClaudeClient {
+class ClaudeClient implements AiBackend {
   ClaudeClient({
     required this.apiKey,
     http.Client? httpClient,
@@ -73,6 +77,7 @@ class ClaudeClient {
   static Map<String, dynamic> textBlock(String text) =>
       {'type': 'text', 'text': text};
 
+  @override
   /// Sends one user turn and returns the response parsed as JSON that
   /// conforms to [schema].
   Future<Map<String, dynamic>> createJson({

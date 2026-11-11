@@ -455,6 +455,12 @@ class StringsDe extends S {
       'Für Erkennung und Rezepte wird ein Claude-API-Schlüssel benötigt.';
 
   @override
+  String get builtInAiActive => 'Claude über dein claude.ai-Konto – kein Schlüssel nötig';
+  @override
+  String get builtInAiInfo =>
+      'In dieser Web-Vorschau fragt die App Claude über dein eigenes claude.ai-Konto. Beim ersten Scan wirst du um Erlaubnis gefragt. Fotos und dein Vorrat werden dafür an Claude gesendet.';
+
+  @override
   String get errorTitle => 'Das hat nicht geklappt';
   @override
   String errorMessage(ClaudeErrorKind kind) => switch (kind) {
@@ -476,6 +482,8 @@ class StringsDe extends S {
           'Die Antwort war unvollständig. Bitte erneut versuchen.',
         ClaudeErrorKind.badResponse =>
           'Unerwartete Antwort vom KI-Dienst. Bitte erneut versuchen.',
+        ClaudeErrorKind.notAllowed =>
+          'Der Zugriff auf Claude wurde nicht erlaubt. Lade die Seite neu, um es erneut zu erlauben.',
         ClaudeErrorKind.badRequest =>
           'Die Anfrage wurde abgelehnt (z. B. Fotos zu groß).',
       };

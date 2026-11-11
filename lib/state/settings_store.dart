@@ -33,6 +33,7 @@ class SettingsStore extends ChangeNotifier {
   late bool _prioritizeExpiring;
   late RecipeFilters _filters;
   String? _userApiKey;
+  bool _builtInAi = false;
 
   ThemeMode get themeMode => _themeMode;
 
@@ -48,7 +49,16 @@ class SettingsStore extends ChangeNotifier {
   /// The key used for API calls: the user's own key, else a build-time key.
   String get effectiveApiKey =>
       hasUserApiKey ? _userApiKey! : AppConfig.apiKeyFromEnvironment;
-  bool get hasApiKey => effectiveApiKey.isNotEmpty;
+  /// True when Claude is reachable without a key (web build on claude.ai).
+  bool get builtInAi => _builtInAi;
+
+  /// Whether AI features can be used at all.
+  bool get hasApiKey => _builtInAi || effectiveApiKey.isNotEmpty;
+
+  void setBuiltInAi(bool value) {
+    _builtInAi = value;
+    notifyListeners();
+  }
 
   Future<void> loadSecrets() async {
     _userApiKey = await _secrets.readApiKey();

@@ -30,18 +30,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final settings = context.watch<SettingsStore>();
 
     Widget header(String text) => Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-          child: Text(
-            text,
-            style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary),
-          ),
-        );
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+      child: Text(
+        text,
+        style: theme.textTheme.titleSmall?.copyWith(
+          color: theme.colorScheme.primary,
+        ),
+      ),
+    );
 
-    final keyStatus = settings.hasUserApiKey
+    final keyStatus = settings.builtInAi
+        ? s.builtInAiActive
+        : settings.hasUserApiKey
         ? s.apiKeyUser
         : AppConfig.apiKeyFromEnvironment.isNotEmpty
-            ? s.apiKeyBuiltIn
-            : s.apiKeyNotSet;
+        ? s.apiKeyBuiltIn
+        : s.apiKeyNotSet;
 
     return Scaffold(
       appBar: AppBar(title: Text(s.settings)),
@@ -79,9 +83,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: settings.setLocaleCode,
             child: Column(
               children: [
-                RadioListTile<String?>(value: null, title: Text(s.languageSystem)),
-                const RadioListTile<String?>(value: 'de', title: Text('Deutsch')),
-                const RadioListTile<String?>(value: 'en', title: Text('English')),
+                RadioListTile<String?>(
+                  value: null,
+                  title: Text(s.languageSystem),
+                ),
+                const RadioListTile<String?>(
+                  value: 'de',
+                  title: Text('Deutsch'),
+                ),
+                const RadioListTile<String?>(
+                  value: 'en',
+                  title: Text('English'),
+                ),
               ],
             ),
           ),
@@ -94,13 +107,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 IconButton(
                   onPressed: settings.defaultServings > 1
-                      ? () => settings.setDefaultServings(settings.defaultServings - 1)
+                      ? () => settings.setDefaultServings(
+                          settings.defaultServings - 1,
+                        )
                       : null,
                   icon: const Icon(Icons.remove_circle_outline),
                 ),
                 IconButton(
                   onPressed: settings.defaultServings < 12
-                      ? () => settings.setDefaultServings(settings.defaultServings + 1)
+                      ? () => settings.setDefaultServings(
+                          settings.defaultServings + 1,
+                        )
                       : null,
                   icon: const Icon(Icons.add_circle_outline),
                 ),
@@ -118,59 +135,72 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ListTile(
             leading: Icon(
               settings.hasApiKey ? Icons.check_circle : Icons.key_off_outlined,
-              color: settings.hasApiKey ? successColor(context) : theme.colorScheme.error,
+              color: settings.hasApiKey
+                  ? successColor(context)
+                  : theme.colorScheme.error,
             ),
             title: Text(keyStatus),
-            subtitle: Text('${AppConfig.model} · ${Uri.parse(AppConfig.baseUrl).host}'),
+            subtitle: Text(
+              settings.builtInAi
+                  ? 'claude.ai'
+                  : '${AppConfig.model} · ${Uri.parse(AppConfig.baseUrl).host}',
+            ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _keyController,
-              obscureText: _obscure,
-              autocorrect: false,
-              enableSuggestions: false,
-              decoration: InputDecoration(
-                labelText: s.apiKey,
-                hintText: s.apiKeyHint,
-                suffixIcon: IconButton(
-                  icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-                  onPressed: () => setState(() => _obscure = !_obscure),
+          if (!settings.builtInAi) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                controller: _keyController,
+                obscureText: _obscure,
+                autocorrect: false,
+                enableSuggestions: false,
+                decoration: InputDecoration(
+                  labelText: s.apiKey,
+                  hintText: s.apiKeyHint,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscure ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () => setState(() => _obscure = !_obscure),
+                  ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Wrap(
-              spacing: 8,
-              children: [
-                FilledButton(
-                  onPressed: () async {
-                    if (_keyController.text.trim().isEmpty) return;
-                    await settings.setApiKey(_keyController.text);
-                    _keyController.clear();
-                    if (context.mounted) showSnack(context, s.apiKeySaved);
-                  },
-                  child: Text(s.save),
-                ),
-                if (settings.hasUserApiKey)
-                  OutlinedButton(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  FilledButton(
                     onPressed: () async {
-                      await settings.setApiKey(null);
-                      if (context.mounted) showSnack(context, s.apiKeyRemoved);
+                      if (_keyController.text.trim().isEmpty) return;
+                      await settings.setApiKey(_keyController.text);
+                      _keyController.clear();
+                      if (context.mounted) showSnack(context, s.apiKeySaved);
                     },
-                    child: Text(s.removeApiKey),
+                    child: Text(s.save),
                   ),
-              ],
+                  if (settings.hasUserApiKey)
+                    OutlinedButton(
+                      onPressed: () async {
+                        await settings.setApiKey(null);
+                        if (context.mounted) {
+                          showSnack(context, s.apiKeyRemoved);
+                        }
+                      },
+                      child: Text(s.removeApiKey),
+                    ),
+                ],
+              ),
             ),
-          ),
+          ],
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Text(
-              s.apiKeyInfo,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              settings.builtInAi ? s.builtInAiInfo : s.apiKeyInfo,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],

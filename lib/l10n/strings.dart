@@ -235,6 +235,8 @@ abstract class S {
   String get removeApiKey;
   String get aiDisclaimer;
   String get missingApiKeyBanner;
+  String get builtInAiActive;
+  String get builtInAiInfo;
 
   // Errors
   String get errorTitle;

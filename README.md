@@ -46,6 +46,15 @@ Weitere Build-Optionen (`--dart-define`):
 | `ANTHROPIC_BASE_URL` | `https://api.anthropic.com` | Eigener Backend-Proxy |
 | `CLAUDE_MODEL` | `claude-opus-5-5` | Verwendetes Modell |
 
+### Web-Vorschau (z. B. am iPhone)
+
+Die Web-Version läuft auch als claude.ai-Artifact. Dort fragt die App Claude über das claude.ai-Konto der Person, die sie öffnet (kein API-Schlüssel nötig):
+
+```bash
+flutter build web --release --no-web-resources-cdn --no-source-maps
+python3 tool/web_artifact.py build/web /tmp/fridgechef-artifact
+```
+
 ### ⚠️ Vor einer Veröffentlichung
 
 * **Keinen API-Schlüssel in die App einbauen.** Alles, was in einer App-Binary steckt, lässt sich auslesen. Für den Store einen kleinen Backend-Proxy betreiben, der den Schlüssel serverseitig hinzufügt (und Nutzer authentifiziert/limitiert), und `ANTHROPIC_BASE_URL` darauf zeigen lassen.

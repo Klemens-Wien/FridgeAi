@@ -451,6 +451,12 @@ class StringsEn extends S {
       'A Claude API key is needed for recognition and recipes.';
 
   @override
+  String get builtInAiActive => 'Claude via your claude.ai account – no key needed';
+  @override
+  String get builtInAiInfo =>
+      'In this web preview the app asks Claude through your own claude.ai account. You will be asked for permission on the first scan. Photos and your pantry are sent to Claude for this.';
+
+  @override
   String get errorTitle => 'Something went wrong';
   @override
   String errorMessage(ClaudeErrorKind kind) => switch (kind) {
@@ -470,6 +476,8 @@ class StringsEn extends S {
           'The response was incomplete. Please try again.',
         ClaudeErrorKind.badResponse =>
           'Unexpected response from the AI service. Please try again.',
+        ClaudeErrorKind.notAllowed =>
+          'Access to Claude was not allowed. Reload the page to allow it again.',
         ClaudeErrorKind.badRequest =>
           'The request was rejected (e.g. photos too large).',
       };

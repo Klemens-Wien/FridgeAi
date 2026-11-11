@@ -5,6 +5,7 @@ import '../config.dart';
 import '../models/pantry_item.dart';
 import '../models/recipe.dart';
 import '../models/recipe_filters.dart';
+import 'ai_backend.dart';
 import 'claude_client.dart';
 import 'image_utils.dart';
 
@@ -13,7 +14,7 @@ import 'image_utils.dart';
 class FridgeAiService {
   FridgeAiService(this.client);
 
-  final ClaudeClient client;
+  final AiBackend client;
 
   static String _languageName(String code) =>
       code == 'de' ? 'German' : 'English';
