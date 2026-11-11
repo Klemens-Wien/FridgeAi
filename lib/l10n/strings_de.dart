@@ -461,6 +461,58 @@ class StringsDe extends S {
       'In dieser Web-Vorschau fragt die App Claude über dein eigenes claude.ai-Konto. Beim ersten Scan wirst du um Erlaubnis gefragt. Fotos und dein Vorrat werden dafür an Claude gesendet.';
 
   @override
+  String get wishHint =>
+      'Worauf hast du Lust? (optional)';
+  @override
+  String get avoidSection =>
+      'Allergien & Abneigungen';
+  @override
+  String get avoidHint =>
+      'z. B. Nüsse, Pilze';
+  @override
+  String get avoidInfo =>
+      'Diese Zutaten kommen in Vorschlägen nicht vor. Die KI kann sich irren – prüfe bei Allergien immer die Zutatenliste.';
+  @override
+  String get searchPantry =>
+      'Vorrat durchsuchen';
+  @override
+  String get groupByCategory =>
+      'Nach Kategorie gruppieren';
+  @override
+  String get noSearchResults =>
+      'Nichts gefunden.';
+  @override
+  String get copyRecipe =>
+      'Rezept kopieren';
+  @override
+  String get copyList =>
+      'Liste kopieren';
+  @override
+  String get copied =>
+      'In die Zwischenablage kopiert';
+  @override
+  String get statsTitle =>
+      'Deine Bilanz';
+  @override
+  String get statsCooked =>
+      'Gerichte gekocht';
+  @override
+  String get statsRescued =>
+      'Lebensmittel gerettet';
+  @override
+  String get findSubstitute =>
+      'Ersatz finden';
+  @override
+  String get substituteLoading =>
+      'Suche Alternativen …';
+  @override
+  String get noSubstitutes =>
+      'Dafür gibt es leider keinen guten Ersatz.';
+  @override
+  String get addToShopping =>
+      'Auf die Einkaufsliste';
+
+  @override
   String get errorTitle => 'Das hat nicht geklappt';
   @override
   String errorMessage(ClaudeErrorKind kind) => switch (kind) {

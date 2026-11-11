@@ -17,6 +17,12 @@ Flutter-App für **iOS und Android**: Kühlschrank fotografieren, die KI (Claude
 | **Einkaufsliste** | Fehlende Zutaten mit einem Tipp hinzufügen (einzeln oder alle). Gleiche Artikel werden zusammengeführt. Abgehakte Artikel in den Vorrat übernehmen. |
 | **Wochenplaner** | Frühstück/Mittag/Abend für jede Woche, Rezepte aus Favoriten/Vorschlägen/Verlauf. Fehlende Zutaten der ganzen Woche auf die Einkaufsliste. |
 | **Favoriten & Verlauf** | Herz im Rezept; Verlauf der zuletzt angesehenen Rezepte (max. 50). |
+| **Wunsch-Eingabe** | Freitext wie „etwas Asiatisches“ fließt in die Rezeptvorschläge ein. |
+| **Allergien & Abneigungen** | Zutaten, die nie vorkommen sollen: gehen an die KI und werden zusätzlich lokal herausgefiltert. |
+| **Ersatz finden** | Fehlende Zutat antippen: Claude schlägt Alternativen vor, bevorzugt aus dem Vorrat. |
+| **Vorrat-Suche & Gruppierung** | Suchfeld ab 7 Einträgen, optional nach Kategorie gruppiert. |
+| **Kopieren/Teilen** | Rezept (mit skalierten Mengen) und Einkaufsliste als Text in die Zwischenablage. |
+| **Bilanz** | Zählt gekochte Gerichte und gerettete (bald ablaufende) Lebensmittel. |
 | **Darstellung** | Hell, Dunkel oder System (Material 3). Deutsch und Englisch (oder Systemsprache) – auch die KI antwortet in der gewählten Sprache. |
 
 Alle Daten bleiben lokal auf dem Gerät (SharedPreferences). Der API-Schlüssel liegt verschlüsselt im Keychain/Keystore.

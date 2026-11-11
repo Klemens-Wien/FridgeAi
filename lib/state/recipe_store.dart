@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../logic/recipe_ranking.dart' show usesAvoidedIngredient;
 import '../models/pantry_item.dart';
 import '../models/recipe.dart';
 import '../models/recipe_filters.dart';
@@ -29,6 +30,8 @@ class RecipeStore extends ChangeNotifier {
     _suggestions = _store.readList(_kSuggestions, Recipe.fromJson);
     _favorites = _store.readList(_kFavorites, Recipe.fromJson);
     _history = _store.readList(_kHistory, HistoryEntry.fromJson);
+    _cookedCount = _store.getInt(_kCooked) ?? 0;
+    _rescuedCount = _store.getInt(_kRescued) ?? 0;
   }
 
   final LocalStore _store;
@@ -37,19 +40,40 @@ class RecipeStore extends ChangeNotifier {
   static const _kSuggestions = 'recipes.suggestions';
   static const _kFavorites = 'recipes.favorites';
   static const _kHistory = 'recipes.history';
+  static const _kCooked = 'stats.cooked';
+  static const _kRescued = 'stats.rescued';
   static const maxHistory = 50;
 
   late List<Recipe> _suggestions;
   late List<Recipe> _favorites;
   late List<HistoryEntry> _history;
 
+  late int _cookedCount;
+  late int _rescuedCount;
   bool _loading = false;
   ClaudeException? _error;
 
   List<Recipe> get suggestions => List.unmodifiable(_suggestions);
   List<Recipe> get favorites => List.unmodifiable(_favorites);
   List<HistoryEntry> get history => List.unmodifiable(_history);
+  /// Free-text craving for the next suggestions (not persisted).
+  String wish = '';
+
   bool get loading => _loading;
+
+  /// How many recipes were finished in cooking mode.
+  int get cookedCount => _cookedCount;
+
+  /// How many soon-to-expire pantry items were used up by cooking.
+  int get rescuedCount => _rescuedCount;
+
+  Future<void> recordCooked({required int rescuedItems}) async {
+    _cookedCount++;
+    _rescuedCount += rescuedItems;
+    notifyListeners();
+    await _store.setInt(_kCooked, _cookedCount);
+    await _store.setInt(_kRescued, _rescuedCount);
+  }
   ClaudeException? get error => _error;
 
   void clearError() {
@@ -66,6 +90,8 @@ class RecipeStore extends ChangeNotifier {
     required String languageCode,
     required int servings,
     required bool prioritizeExpiring,
+    List<String> avoidIngredients = const [],
+    String wish = '',
     bool append = false,
   }) async {
     if (_loading) return;
@@ -81,9 +107,15 @@ class RecipeStore extends ChangeNotifier {
         servings: servings,
         prioritizeExpiring: prioritizeExpiring,
         avoidTitles: append ? _suggestions.map((r) => r.title).toList() : const [],
+        avoidIngredients: avoidIngredients,
+        wish: wish,
       );
-      // Safety net: never show recipes that break the user's diet filters.
-      final valid = recipes.where(filters.matches).toList();
+      // Safety net: never show recipes that break the user's diet filters
+      // or contain something they must avoid.
+      final valid = recipes
+          .where(filters.matches)
+          .where((r) => !usesAvoidedIngredient(r, avoidIngredients))
+          .toList();
       _suggestions = append ? [..._suggestions, ...valid] : valid;
       await _store.writeList(_kSuggestions, _suggestions, (r) => r.toJson());
     } on ClaudeException catch (e) {

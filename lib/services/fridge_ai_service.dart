@@ -253,6 +253,8 @@ How the app uses your output:
     required bool prioritizeExpiring,
     required int count,
     List<String> avoidTitles = const [],
+    List<String> avoidIngredients = const [],
+    String wish = '',
     DateTime? now,
   }) {
     final today = now ?? DateTime.now();
@@ -293,6 +295,12 @@ How the app uses your output:
       if (prioritizeExpiring)
         '- Prioritise using the items marked as expiring soon; at least half '
             'of the recipes should use one or more of them if possible.',
+      if (avoidIngredients.isNotEmpty)
+        '- Never use these ingredients or anything containing them (allergy '
+            'or strong dislike): ${avoidIngredients.join(', ')}',
+      if (wish.trim().isNotEmpty)
+        '- What I feel like today (follow this as far as the pantry allows): '
+            '${wish.trim()}',
       if (avoidTitles.isNotEmpty)
         '- Do not repeat these recipes I have already seen: ${avoidTitles.join('; ')}',
       '',
@@ -307,6 +315,8 @@ How the app uses your output:
     required int servings,
     bool prioritizeExpiring = true,
     List<String> avoidTitles = const [],
+    List<String> avoidIngredients = const [],
+    String wish = '',
     int count = AppConfig.recipesPerRequest,
   }) async {
     final json = await client.createJson(
@@ -319,6 +329,8 @@ How the app uses your output:
           prioritizeExpiring: prioritizeExpiring,
           count: count,
           avoidTitles: avoidTitles,
+          avoidIngredients: avoidIngredients,
+          wish: wish,
         )),
       ],
       schema: recipeSchema,
@@ -336,4 +348,89 @@ How the app uses your output:
           .map((r) => Recipe.fromJson(r, languageCode: languageCode))
           .where((r) => r.title.isNotEmpty && r.ingredients.isNotEmpty)
           .toList();
+
+  // ---------------------------------------------------------------------------
+  // Ingredient substitutes
+  // ---------------------------------------------------------------------------
+
+  static final Map<String, dynamic> substituteSchema = {
+    'type': 'object',
+    'properties': {
+      'substitutes': {
+        'type': 'array',
+        'items': {
+          'type': 'object',
+          'properties': {
+            'name': {'type': 'string'},
+            'note': {'type': 'string'},
+            'pantryItem': {'type': 'string'},
+          },
+          'required': ['name', 'note', 'pantryItem'],
+          'additionalProperties': false,
+        },
+      },
+    },
+    'required': ['substitutes'],
+    'additionalProperties': false,
+  };
+
+  static String substituteSystemPrompt(String languageCode) => '''
+You help a home cook who is missing one ingredient for a recipe in the
+FridgeChef app. Suggest up to 4 realistic substitutes, best first.
+
+- Prefer things from the user's pantry. For those, set "pantryItem" to the
+  exact pantry name copied verbatim; otherwise "".
+- "note" is one short sentence: how much to use instead and what changes in
+  taste or texture. If simply leaving the ingredient out works, you may offer
+  that as one option.
+- Only suggest substitutes that genuinely work in this recipe. If nothing
+  sensible exists, return an empty list.
+- Respect the listed ingredients to avoid.
+- Write in ${_languageName(languageCode)}.
+''';
+
+  Future<List<Substitute>> suggestSubstitutes({
+    required Recipe recipe,
+    required RecipeIngredient ingredient,
+    required List<PantryItem> pantry,
+    required String languageCode,
+    List<String> avoidIngredients = const [],
+  }) async {
+    final prompt = [
+      'Recipe: ${recipe.title}',
+      'Ingredients: ${recipe.ingredients.map((i) => i.name).join(', ')}',
+      'Missing ingredient: ${ingredient.name}'
+          '${ingredient.amount > 0 ? ' (${ingredient.amount} ${ingredient.unit})'.replaceAll(' )', ')') : ''}',
+      'My pantry: ${pantry.isEmpty ? '(empty)' : pantry.map((p) => p.name).join(', ')}',
+      if (avoidIngredients.isNotEmpty)
+        'Ingredients to avoid: ${avoidIngredients.join(', ')}',
+    ].join('\n');
+    final json = await client.createJson(
+      system: substituteSystemPrompt(languageCode),
+      content: [ClaudeClient.textBlock(prompt)],
+      schema: substituteSchema,
+      effort: 'low',
+    );
+    return (json['substitutes'] as List? ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map(Substitute.fromJson)
+        .where((s) => s.name.isNotEmpty)
+        .toList();
+  }
+}
+
+class Substitute {
+  const Substitute({required this.name, this.note = '', this.pantryItem = ''});
+
+  final String name;
+  final String note;
+
+  /// Pantry item this substitute refers to ("" if it has to be bought).
+  final String pantryItem;
+
+  factory Substitute.fromJson(Map<String, dynamic> json) => Substitute(
+        name: (json['name'] as String? ?? '').trim(),
+        note: (json['note'] as String? ?? '').trim(),
+        pantryItem: (json['pantryItem'] as String? ?? '').trim(),
+      );
 }

@@ -110,6 +110,14 @@ final sampleIngredients = {
   ],
 };
 
+final sampleSubstitutes = {
+  'substitutes': [
+    {'name': 'Eier', 'note': 'Macht das Omelett fester.', 'pantryItem': 'Eier'},
+    {'name': 'Feta', 'note': 'Etwas salziger.', 'pantryItem': ''},
+    {'name': 'Gouda', 'note': 'Angeblich im Vorrat.', 'pantryItem': 'Gouda'},
+  ],
+};
+
 /// A Claude client backed by [MockClient] that answers recipe and ingredient
 /// requests with the samples above and records every request body.
 class FakeClaude {
@@ -120,6 +128,7 @@ class FakeClaude {
     requests.add(body);
     final schema = body['output_config']['format']['schema'] as Map;
     final props = schema['properties'] as Map;
+    if (props.containsKey('substitutes')) return messageResponse(sampleSubstitutes);
     return messageResponse(
       props.containsKey('recipes') ? sampleRecipes : sampleIngredients,
     );

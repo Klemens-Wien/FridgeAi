@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/strings.dart';
 import '../../logic/scaling.dart';
+import '../../logic/share_text.dart';
 import '../../models/pantry_item.dart';
 import '../../models/shopping_item.dart';
 import '../../state/pantry_store.dart';
@@ -60,6 +62,11 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
             PopupMenuButton<String>(
               onSelected: (v) async {
                 switch (v) {
+                  case 'copy':
+                    await Clipboard.setData(ClipboardData(
+                      text: shoppingShareText(store.items, s),
+                    ));
+                    if (context.mounted) showSnack(context, s.copied);
                   case 'pantry':
                     await _moveCheckedToPantry();
                   case 'clearChecked':
@@ -71,6 +78,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                 }
               },
               itemBuilder: (_) => [
+                PopupMenuItem(value: 'copy', child: Text(s.copyList)),
                 PopupMenuItem(
                   value: 'pantry',
                   enabled: store.hasChecked,

@@ -9,6 +9,18 @@ String normalizeName(String s) => s
     .replaceAll(RegExp(r'\s+'), ' ')
     .trim();
 
+/// True if any ingredient of [recipe] matches one of the [avoid] terms
+/// (word containment in either direction, e.g. "Nüsse" ↔ "Walnüsse").
+bool usesAvoidedIngredient(Recipe recipe, Iterable<String> avoid) {
+  final terms =
+      avoid.map(normalizeName).where((t) => t.length >= 3).toList();
+  if (terms.isEmpty) return false;
+  return recipe.ingredients.any((i) {
+    final n = normalizeName(i.name);
+    return terms.any((t) => n.contains(t) || (n.length >= 3 && t.contains(n)));
+  });
+}
+
 /// Result of matching a recipe's ingredients against the pantry.
 class RecipeMatch {
   RecipeMatch({

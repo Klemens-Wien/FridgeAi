@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../app.dart';
 import '../../l10n/strings.dart';
+import '../../logic/recipe_ranking.dart' show normalizeName;
 import '../../models/pantry_item.dart';
 import '../../state/pantry_store.dart';
 import '../../state/settings_store.dart';
@@ -11,8 +12,18 @@ import '../scan/scan_screen.dart';
 import '../widgets/common.dart';
 import 'pantry_item_editor.dart';
 
-class PantryScreen extends StatelessWidget {
+class PantryScreen extends StatefulWidget {
   const PantryScreen({super.key});
+
+  @override
+  State<PantryScreen> createState() => _PantryScreenState();
+}
+
+class _PantryScreenState extends State<PantryScreen> {
+  String _query = '';
+
+  /// The search field only earns its space once the list gets long.
+  static const _searchThreshold = 6;
 
   Future<void> _addManually(BuildContext context) async {
     final pantry = context.read<PantryStore>();
@@ -30,8 +41,20 @@ class PantryScreen extends StatelessWidget {
     final s = context.s;
     final pantry = context.watch<PantryStore>();
     final hasKey = context.select<SettingsStore, bool>((s) => s.hasApiKey);
+    final settings = context.watch<SettingsStore>();
     final items = pantry.items;
     final expiring = pantry.expiringSoon;
+    final q = normalizeName(_query);
+    final visible = q.isEmpty
+        ? items
+        : items.where((i) => normalizeName(i.name).contains(q)).toList();
+    final grouped = <FoodCategory, List<PantryItem>>{};
+    if (settings.groupPantry) {
+      for (final c in FoodCategory.values) {
+        final inCat = visible.where((i) => i.category == c).toList();
+        if (inCat.isNotEmpty) grouped[c] = inCat;
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -45,11 +68,19 @@ class PantryScreen extends StatelessWidget {
           if (items.isNotEmpty)
             PopupMenuButton<String>(
               onSelected: (v) async {
-                if (v == 'clear' && await confirm(context, s.clearPantryConfirm)) {
+                if (v == 'group') {
+                  await settings.setGroupPantry(!settings.groupPantry);
+                } else if (v == 'clear' &&
+                    await confirm(context, s.clearPantryConfirm)) {
                   await pantry.clear();
                 }
               },
               itemBuilder: (_) => [
+                CheckedPopupMenuItem(
+                  value: 'group',
+                  checked: settings.groupPantry,
+                  child: Text(s.groupByCategory),
+                ),
                 PopupMenuItem(value: 'clear', child: Text(s.clearPantry)),
               ],
             ),
@@ -99,7 +130,40 @@ class PantryScreen extends StatelessWidget {
                         label: Text(s.findRecipes),
                       ),
                       const SizedBox(height: 12),
-                      for (final item in items) _PantryTile(item: item),
+                      if (items.length > _searchThreshold) ...[
+                        TextField(
+                          onChanged: (v) => setState(() => _query = v),
+                          textInputAction: TextInputAction.search,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            hintText: s.searchPantry,
+                            prefixIcon: const Icon(Icons.search),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      if (visible.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text(
+                            s.noSearchResults,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      if (settings.groupPantry)
+                        for (final entry in grouped.entries) ...[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+                            child: Text(
+                              '${s.categoryName(entry.key)} (${entry.value.length})',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                          ),
+                          for (final item in entry.value)
+                            _PantryTile(item: item),
+                        ]
+                      else
+                        for (final item in visible) _PantryTile(item: item),
                     ],
                   ),
           ),

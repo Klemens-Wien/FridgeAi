@@ -15,12 +15,22 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _keyController = TextEditingController();
+  final _avoidController = TextEditingController();
   bool _obscure = true;
 
   @override
   void dispose() {
     _keyController.dispose();
+    _avoidController.dispose();
     super.dispose();
+  }
+
+  void _addAvoid(SettingsStore settings) {
+    // Several entries can be typed at once, separated by commas.
+    for (final part in _avoidController.text.split(',')) {
+      settings.addAvoidIngredient(part);
+    }
+    _avoidController.clear();
   }
 
   @override
@@ -130,6 +140,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: Text(s.prioritizeExpiringHint),
             value: settings.prioritizeExpiring,
             onChanged: settings.setPrioritizeExpiring,
+          ),
+          header(s.avoidSection),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _avoidController,
+                  textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _addAvoid(settings),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: s.avoidHint,
+                    suffixIcon: IconButton(
+                      tooltip: s.add,
+                      icon: const Icon(Icons.add),
+                      onPressed: () => _addAvoid(settings),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    for (final a in settings.avoidIngredients)
+                      InputChip(
+                        label: Text(a),
+                        onDeleted: () => settings.removeAvoidIngredient(a),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  s.avoidInfo,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
           header(s.apiKeySection),
           ListTile(

@@ -238,6 +238,25 @@ abstract class S {
   String get builtInAiActive;
   String get builtInAiInfo;
 
+  // Extras
+  String get wishHint;
+  String get avoidSection;
+  String get avoidHint;
+  String get avoidInfo;
+  String get searchPantry;
+  String get groupByCategory;
+  String get noSearchResults;
+  String get copyRecipe;
+  String get copyList;
+  String get copied;
+  String get statsTitle;
+  String get statsCooked;
+  String get statsRescued;
+  String get findSubstitute;
+  String get substituteLoading;
+  String get noSubstitutes;
+  String get addToShopping;
+
   // Errors
   String get errorTitle;
   String errorMessage(ClaudeErrorKind kind);

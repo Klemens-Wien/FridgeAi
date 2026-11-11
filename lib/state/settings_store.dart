@@ -15,6 +15,8 @@ class SettingsStore extends ChangeNotifier {
     _prioritizeExpiring = _store.getBool(_kExpiring) ?? true;
     final f = _store.readMap(_kFilters);
     _filters = f == null ? const RecipeFilters() : RecipeFilters.fromJson(f);
+    _avoidIngredients = _store.getStringList(_kAvoid);
+    _groupPantry = _store.getBool(_kGroupPantry) ?? false;
   }
 
   final LocalStore _store;
@@ -25,6 +27,8 @@ class SettingsStore extends ChangeNotifier {
   static const _kServings = 'settings.servings';
   static const _kExpiring = 'settings.prioritizeExpiring';
   static const _kFilters = 'settings.filters';
+  static const _kAvoid = 'settings.avoidIngredients';
+  static const _kGroupPantry = 'settings.groupPantry';
   static const supportedLanguages = ['de', 'en'];
 
   late ThemeMode _themeMode;
@@ -32,6 +36,8 @@ class SettingsStore extends ChangeNotifier {
   late int _defaultServings;
   late bool _prioritizeExpiring;
   late RecipeFilters _filters;
+  late List<String> _avoidIngredients;
+  late bool _groupPantry;
   String? _userApiKey;
   bool _builtInAi = false;
 
@@ -43,6 +49,33 @@ class SettingsStore extends ChangeNotifier {
   int get defaultServings => _defaultServings;
   bool get prioritizeExpiring => _prioritizeExpiring;
   RecipeFilters get filters => _filters;
+
+  /// Ingredients that must never appear in suggestions (allergies, dislikes).
+  List<String> get avoidIngredients => List.unmodifiable(_avoidIngredients);
+  bool get groupPantry => _groupPantry;
+
+  Future<void> addAvoidIngredient(String name) async {
+    final n = name.trim();
+    if (n.isEmpty ||
+        _avoidIngredients.any((a) => a.toLowerCase() == n.toLowerCase())) {
+      return;
+    }
+    _avoidIngredients = [..._avoidIngredients, n];
+    notifyListeners();
+    await _store.setStringList(_kAvoid, _avoidIngredients);
+  }
+
+  Future<void> removeAvoidIngredient(String name) async {
+    _avoidIngredients = _avoidIngredients.where((a) => a != name).toList();
+    notifyListeners();
+    await _store.setStringList(_kAvoid, _avoidIngredients);
+  }
+
+  Future<void> setGroupPantry(bool value) async {
+    _groupPantry = value;
+    notifyListeners();
+    await _store.setBool(_kGroupPantry, value);
+  }
 
   bool get hasUserApiKey => (_userApiKey ?? '').isNotEmpty;
 

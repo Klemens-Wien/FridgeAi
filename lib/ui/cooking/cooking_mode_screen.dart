@@ -8,6 +8,7 @@ import '../../logic/recipe_ranking.dart';
 import '../../logic/scaling.dart';
 import '../../models/recipe.dart';
 import '../../state/pantry_store.dart';
+import '../../state/recipe_store.dart';
 import '../widgets/common.dart';
 import 'cooking_timer.dart';
 
@@ -147,9 +148,12 @@ class _CookingModeScreenState extends State<CookingModeScreen> {
   Future<void> _finish() async {
     final s = context.s;
     final pantry = context.read<PantryStore>();
-    final used = RecipeRanker(pantry.items).match(recipe).available.values
-        .map((p) => p.name)
-        .toSet();
+    final match = RecipeRanker(pantry.items).match(recipe);
+    final used = match.available.values.map((p) => p.name).toSet();
+    await context
+        .read<RecipeStore>()
+        .recordCooked(rescuedItems: match.expiringUsed.length);
+    if (!mounted) return;
     if (used.isEmpty) {
       Navigator.pop(context);
       return;

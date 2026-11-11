@@ -20,6 +20,8 @@ Future<void> generateRecipes(BuildContext context, {bool append = false}) {
         languageCode: context.s.languageCode,
         servings: settings.defaultServings,
         prioritizeExpiring: settings.prioritizeExpiring,
+        avoidIngredients: settings.avoidIngredients,
+        wish: context.read<RecipeStore>().wish,
         append: append,
       );
 }
@@ -37,7 +39,9 @@ class RecipesScreen extends StatelessWidget {
 
     final ranked = RecipeRanker(pantry.items)
         .rank(
-          store.suggestions.where(filters.matches),
+          store.suggestions.where(filters.matches).where(
+                (r) => !usesAvoidedIngredient(r, settings.avoidIngredients),
+              ),
           prioritizeExpiring: settings.prioritizeExpiring,
         )
         .toList();
@@ -136,10 +140,63 @@ class RecipesScreen extends StatelessWidget {
       body: Column(
         children: [
           if (!settings.hasApiKey) const MissingApiKeyBanner(),
+          const _WishField(),
           if (store.loading && store.suggestions.isNotEmpty)
             const LinearProgressIndicator(),
           Expanded(child: body),
         ],
+      ),
+    );
+  }
+}
+
+/// "What do you feel like?" – optional free text passed to the recipe prompt.
+class _WishField extends StatefulWidget {
+  const _WishField();
+
+  @override
+  State<_WishField> createState() => _WishFieldState();
+}
+
+class _WishFieldState extends State<_WishField> {
+  late final _controller =
+      TextEditingController(text: context.read<RecipeStore>().wish);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    FocusScope.of(context).unfocus();
+    generateRecipes(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.s;
+    final loading = context.select<RecipeStore, bool>((r) => r.loading);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: TextField(
+        controller: _controller,
+        textInputAction: TextInputAction.search,
+        textCapitalization: TextCapitalization.sentences,
+        maxLength: 120,
+        onChanged: (v) => context.read<RecipeStore>().wish = v,
+        onSubmitted: (_) => _submit(),
+        decoration: InputDecoration(
+          isDense: true,
+          counterText: '',
+          hintText: s.wishHint,
+          prefixIcon: const Icon(Icons.lightbulb_outline),
+          suffixIcon: IconButton(
+            tooltip: s.generateRecipes,
+            icon: const Icon(Icons.auto_awesome),
+            onPressed: loading ? null : _submit,
+          ),
+        ),
       ),
     );
   }

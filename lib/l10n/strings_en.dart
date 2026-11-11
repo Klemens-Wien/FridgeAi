@@ -457,6 +457,58 @@ class StringsEn extends S {
       'In this web preview the app asks Claude through your own claude.ai account. You will be asked for permission on the first scan. Photos and your pantry are sent to Claude for this.';
 
   @override
+  String get wishHint =>
+      'What do you feel like? (optional)';
+  @override
+  String get avoidSection =>
+      'Allergies & dislikes';
+  @override
+  String get avoidHint =>
+      'e.g. nuts, mushrooms';
+  @override
+  String get avoidInfo =>
+      'These ingredients are kept out of suggestions. The AI can make mistakes – always check the ingredient list if you have allergies.';
+  @override
+  String get searchPantry =>
+      'Search pantry';
+  @override
+  String get groupByCategory =>
+      'Group by category';
+  @override
+  String get noSearchResults =>
+      'Nothing found.';
+  @override
+  String get copyRecipe =>
+      'Copy recipe';
+  @override
+  String get copyList =>
+      'Copy list';
+  @override
+  String get copied =>
+      'Copied to clipboard';
+  @override
+  String get statsTitle =>
+      'Your record';
+  @override
+  String get statsCooked =>
+      'meals cooked';
+  @override
+  String get statsRescued =>
+      'foods rescued';
+  @override
+  String get findSubstitute =>
+      'Find a substitute';
+  @override
+  String get substituteLoading =>
+      'Looking for alternatives …';
+  @override
+  String get noSubstitutes =>
+      'There is no good substitute for this.';
+  @override
+  String get addToShopping =>
+      'Add to shopping list';
+
+  @override
   String get errorTitle => 'Something went wrong';
   @override
   String errorMessage(ClaudeErrorKind kind) => switch (kind) {

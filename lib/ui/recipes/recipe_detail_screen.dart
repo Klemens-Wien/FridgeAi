@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -6,10 +7,14 @@ import '../../app.dart';
 import '../../l10n/strings.dart';
 import '../../logic/recipe_ranking.dart';
 import '../../logic/scaling.dart';
+import '../../logic/share_text.dart';
 import '../../models/recipe.dart';
 import '../../models/shopping_item.dart';
 import '../../state/pantry_store.dart';
+import '../../services/claude_client.dart';
+import '../../services/fridge_ai_service.dart';
 import '../../state/recipe_store.dart';
+import '../../state/settings_store.dart';
 import '../../state/shopping_store.dart';
 import '../cooking/cooking_mode_screen.dart';
 import '../planner/add_to_plan_sheet.dart';
@@ -89,6 +94,16 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       appBar: AppBar(
         actions: [
           IconButton(
+            tooltip: s.copyRecipe,
+            icon: const Icon(Icons.copy_outlined),
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(
+                text: recipeShareText(recipe, _servings, s),
+              ));
+              if (context.mounted) showSnack(context, s.copied);
+            },
+          ),
+          IconButton(
             tooltip: s.addToPlan,
             icon: const Icon(Icons.event_available_outlined),
             onPressed: () => showAddToPlanSheet(context, recipe, servings: _servings),
@@ -166,6 +181,20 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     available: match.available.containsKey(ing),
                     onList: shopping.contains(ing.name),
                     onAdd: () => _addOne(ing),
+                    onTap: match.missing.contains(ing)
+                        ? () => showModalBottomSheet<void>(
+                              context: context,
+                              showDragHandle: true,
+                              isScrollControlled: true,
+                              builder: (_) => _MissingSheet(
+                                recipe: recipe,
+                                ingredient: ing,
+                                onAdd: shopping.contains(ing.name)
+                                    ? null
+                                    : () => _addOne(ing),
+                              ),
+                            )
+                        : null,
                   ),
               ],
             ),
@@ -331,8 +360,10 @@ class _IngredientRow extends StatelessWidget {
     required this.available,
     required this.onList,
     required this.onAdd,
+    this.onTap,
   });
 
+  final VoidCallback? onTap;
   final RecipeIngredient ingredient;
   final String amountText;
   final bool available;
@@ -351,6 +382,7 @@ class _IngredientRow extends StatelessWidget {
 
     return ListTile(
       dense: true,
+      onTap: onTap,
       leading: Tooltip(message: status, child: Icon(icon, color: color)),
       title: Text(ingredient.name),
       subtitle: Text(status, style: TextStyle(color: color)),
@@ -476,6 +508,132 @@ class _NutritionCard extends StatelessWidget {
                 ),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Options for a missing ingredient: put it on the shopping list, or ask the
+/// AI what could replace it (preferably something already in the pantry).
+class _MissingSheet extends StatefulWidget {
+  const _MissingSheet({
+    required this.recipe,
+    required this.ingredient,
+    required this.onAdd,
+  });
+
+  final Recipe recipe;
+  final RecipeIngredient ingredient;
+
+  /// Null when the ingredient is already on the shopping list.
+  final VoidCallback? onAdd;
+
+  @override
+  State<_MissingSheet> createState() => _MissingSheetState();
+}
+
+class _MissingSheetState extends State<_MissingSheet> {
+  bool _loading = false;
+  List<Substitute>? _result;
+  ClaudeException? _error;
+
+  Future<void> _find() async {
+    final settings = context.read<SettingsStore>();
+    final factory = context.read<AiServiceFactory>();
+    final pantry = context.read<PantryStore>().items;
+    final lang = context.s.languageCode;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final result = await factory(settings.effectiveApiKey).suggestSubstitutes(
+        recipe: widget.recipe,
+        ingredient: widget.ingredient,
+        pantry: pantry,
+        languageCode: lang,
+        avoidIngredients: settings.avoidIngredients,
+      );
+      if (mounted) setState(() => _result = result);
+    } on ClaudeException catch (e) {
+      if (mounted) setState(() => _error = e);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _error =
+            ClaudeException(ClaudeErrorKind.badResponse, e.toString()));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.s;
+    final theme = Theme.of(context);
+    final result = _result;
+    final pantry = context.watch<PantryStore>();
+    // Trust the model's pantry mapping only if the item really is there.
+    bool inPantry(Substitute sub) =>
+        sub.pantryItem.isNotEmpty && pantry.contains(sub.pantryItem);
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(widget.ingredient.name, style: theme.textTheme.titleLarge),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: widget.onAdd == null
+                      ? null
+                      : () {
+                          widget.onAdd!();
+                          Navigator.pop(context);
+                        },
+                  icon: const Icon(Icons.add_shopping_cart),
+                  label: Text(
+                    widget.onAdd == null ? s.onShoppingList : s.addToShopping,
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _loading ? null : _find,
+                  icon: const Icon(Icons.swap_horiz),
+                  label: Text(s.findSubstitute),
+                ),
+              ],
+            ),
+            if (_loading)
+              AiProgress(title: s.substituteLoading)
+            else if (_error != null) ...[
+              const SizedBox(height: 12),
+              AiErrorCard(error: _error!, onRetry: _find),
+            ] else if (result != null && result.isEmpty) ...[
+              const SizedBox(height: 16),
+              Text(s.noSubstitutes),
+            ] else if (result != null)
+              for (final sub in result)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    inPantry(sub) ? Icons.kitchen : Icons.storefront_outlined,
+                    color: inPantry(sub) ? successColor(context) : null,
+                  ),
+                  title: Text(sub.name),
+                  subtitle: Text(
+                    [
+                      if (inPantry(sub)) s.inPantry,
+                      if (sub.note.isNotEmpty) sub.note,
+                    ].join(' · '),
+                  ),
+                ),
           ],
         ),
       ),
