@@ -323,9 +323,9 @@ class StringsDe extends S {
   String get cookingDoneBody =>
       'Sollen die verwendeten Zutaten aus deinem Vorrat entfernt werden?';
   @override
-  String get removeUsedFromPantry => 'Aus Vorrat entfernen';
+  String get removeUsedFromPantry => 'Vorrat aktualisieren';
   @override
-  String get keepPantry => 'Behalten';
+  String get keepPantry => 'Nichts ändern';
   @override
   String removedFromPantry(int n) => n == 1
       ? '1 Lebensmittel aus dem Vorrat entfernt'
@@ -581,6 +581,134 @@ class StringsDe extends S {
   @override
   String get calorieDisclaimer =>
       'Die Werte sind Schätzungen und ersetzen keine Ernährungsberatung.';
+
+  @override
+  String get scanModeFridge =>
+      'Kühlschrank';
+  @override
+  String get scanModeReceipt =>
+      'Kassenbon';
+  @override
+  String get receiptHint =>
+      'Fotografiere deinen Kassenbon. Bei langen Bons einfach mehrere Fotos machen. Die gekauften Lebensmittel landen in deinem Vorrat.';
+  @override
+  String get analyzeReceipt =>
+      'Kassenbon auslesen';
+  @override
+  String get pantryUpdateBody =>
+      'So ändert sich dein Vorrat:';
+  @override
+  String get pantryUsedUp =>
+      'aufgebraucht – wird entfernt';
+  @override
+  String get pantryUnknown =>
+      'Menge unklar – entfernen?';
+  @override
+  String get pantryUpdated =>
+      'Vorrat aktualisiert';
+  @override
+  String get calculateGoal =>
+      'Ziel berechnen';
+  @override
+  String get sex =>
+      'Geschlecht';
+  @override
+  String get female =>
+      'Weiblich';
+  @override
+  String get male =>
+      'Männlich';
+  @override
+  String get age =>
+      'Alter';
+  @override
+  String get heightCm =>
+      'Größe (cm)';
+  @override
+  String get weightKg =>
+      'Gewicht (kg)';
+  @override
+  String get activity =>
+      'Aktivität';
+  @override
+  String get activitySedentary =>
+      'Kaum Bewegung';
+  @override
+  String get activityLight =>
+      'Leicht aktiv';
+  @override
+  String get activityModerate =>
+      'Aktiv';
+  @override
+  String get activityActive =>
+      'Sehr aktiv';
+  @override
+  String get aim =>
+      'Ziel';
+  @override
+  String get aimLose =>
+      'Abnehmen';
+  @override
+  String get aimMaintain =>
+      'Halten';
+  @override
+  String get aimGain =>
+      'Zunehmen';
+  @override
+  String get goalFormulaNote =>
+      'Richtwert nach Mifflin-St-Jeor. Deine Angaben werden nicht gespeichert. Bei gesundheitlichen Fragen bitte ärztlich beraten lassen.';
+  @override
+  String get useThisGoal =>
+      'Als Tagesziel übernehmen';
+  @override
+  String get fillAllFields =>
+      'Bitte alle Felder ausfüllen.';
+  @override
+  String get plannedToday =>
+      'Geplant';
+  @override
+  String get eaten =>
+      'Gegessen';
+  @override
+  String get frequentMeals =>
+      'Häufig gegessen';
+  @override
+  String get ownRecipes =>
+      'Eigene Rezepte';
+  @override
+  String get ownRecipesEmpty =>
+      'Noch keine eigenen Rezepte. Tippe ein Rezept ein oder fotografiere es aus einem Kochbuch.';
+  @override
+  String get importRecipe =>
+      'Rezept importieren';
+  @override
+  String get importHint =>
+      'Rezept hier eintippen oder einfügen – so, wie du es aufschreiben würdest …';
+  @override
+  String get importing =>
+      'Lese Rezept ein …';
+  @override
+  String get importFailed =>
+      'Darin wurde kein Rezept erkannt.';
+  @override
+  String get importNeedsInput =>
+      'Gib einen Text ein oder füge ein Foto hinzu.';
+  @override
+  String get recipeImported =>
+      'Rezept gespeichert';
+  @override
+  String get yourRating =>
+      'Deine Bewertung';
+  @override
+  String get ratingHint =>
+      'Bewertungen fließen in künftige Vorschläge ein.';
+  @override
+  String plannedKcal(int kcal) => 'geplant: ≈ $kcal kcal';
+  @override
+  String photosAdded(int n) => n == 1 ? '1 Foto' : '$n Fotos';
+
+  @override
+  String get carbsShort => 'Kohlenh.';
 
   @override
   String get errorTitle => 'Das hat nicht geklappt';

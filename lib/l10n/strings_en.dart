@@ -320,9 +320,9 @@ class StringsEn extends S {
   String get cookingDoneBody =>
       'Remove the ingredients you used from your pantry?';
   @override
-  String get removeUsedFromPantry => 'Remove from pantry';
+  String get removeUsedFromPantry => 'Update pantry';
   @override
-  String get keepPantry => 'Keep';
+  String get keepPantry => 'Change nothing';
   @override
   String removedFromPantry(int n) => n == 1
       ? '1 item removed from pantry'
@@ -577,6 +577,134 @@ class StringsEn extends S {
   @override
   String get calorieDisclaimer =>
       'Values are estimates and do not replace nutritional advice.';
+
+  @override
+  String get scanModeFridge =>
+      'Fridge';
+  @override
+  String get scanModeReceipt =>
+      'Receipt';
+  @override
+  String get receiptHint =>
+      'Take a photo of your receipt. For long receipts, simply take several photos. The groceries you bought go into your pantry.';
+  @override
+  String get analyzeReceipt =>
+      'Read receipt';
+  @override
+  String get pantryUpdateBody =>
+      'This is how your pantry changes:';
+  @override
+  String get pantryUsedUp =>
+      'used up – will be removed';
+  @override
+  String get pantryUnknown =>
+      'amount unclear – remove?';
+  @override
+  String get pantryUpdated =>
+      'Pantry updated';
+  @override
+  String get calculateGoal =>
+      'Calculate goal';
+  @override
+  String get sex =>
+      'Sex';
+  @override
+  String get female =>
+      'Female';
+  @override
+  String get male =>
+      'Male';
+  @override
+  String get age =>
+      'Age';
+  @override
+  String get heightCm =>
+      'Height (cm)';
+  @override
+  String get weightKg =>
+      'Weight (kg)';
+  @override
+  String get activity =>
+      'Activity';
+  @override
+  String get activitySedentary =>
+      'Little movement';
+  @override
+  String get activityLight =>
+      'Lightly active';
+  @override
+  String get activityModerate =>
+      'Active';
+  @override
+  String get activityActive =>
+      'Very active';
+  @override
+  String get aim =>
+      'Aim';
+  @override
+  String get aimLose =>
+      'Lose weight';
+  @override
+  String get aimMaintain =>
+      'Maintain';
+  @override
+  String get aimGain =>
+      'Gain weight';
+  @override
+  String get goalFormulaNote =>
+      'Guide value using the Mifflin-St Jeor equation. Your details are not stored. For health questions, please ask a doctor.';
+  @override
+  String get useThisGoal =>
+      'Use as daily goal';
+  @override
+  String get fillAllFields =>
+      'Please fill in all fields.';
+  @override
+  String get plannedToday =>
+      'Planned';
+  @override
+  String get eaten =>
+      'Eaten';
+  @override
+  String get frequentMeals =>
+      'Eaten often';
+  @override
+  String get ownRecipes =>
+      'My recipes';
+  @override
+  String get ownRecipesEmpty =>
+      'No recipes of your own yet. Type one in or photograph it from a cookbook.';
+  @override
+  String get importRecipe =>
+      'Import recipe';
+  @override
+  String get importHint =>
+      'Type or paste your recipe here – just as you would write it down …';
+  @override
+  String get importing =>
+      'Reading recipe …';
+  @override
+  String get importFailed =>
+      'No recipe was found in this.';
+  @override
+  String get importNeedsInput =>
+      'Enter some text or add a photo.';
+  @override
+  String get recipeImported =>
+      'Recipe saved';
+  @override
+  String get yourRating =>
+      'Your rating';
+  @override
+  String get ratingHint =>
+      'Ratings shape future suggestions.';
+  @override
+  String plannedKcal(int kcal) => 'planned: ≈ $kcal kcal';
+  @override
+  String photosAdded(int n) => n == 1 ? '1 photo' : '$n photos';
+
+  @override
+  String get carbsShort => 'Carbs';
 
   @override
   String get errorTitle => 'Something went wrong';

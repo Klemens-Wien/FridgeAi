@@ -51,6 +51,26 @@ class FoodLogStore extends ChangeNotifier {
     ];
   }
 
+  /// The meals logged most often (by name), most frequent first; ties go
+  /// to the more recent one. Each is represented by its latest entry.
+  List<FoodLogEntry> frequent({int max = 6}) {
+    final count = <String, int>{};
+    final latest = <String, FoodLogEntry>{};
+    for (final e in _entries) {
+      final key = e.name.trim().toLowerCase();
+      if (key.isEmpty) continue;
+      count[key] = (count[key] ?? 0) + 1;
+      final l = latest[key];
+      if (l == null || e.eatenAt.isAfter(l.eatenAt)) latest[key] = e;
+    }
+    final keys = count.keys.toList()
+      ..sort((a, b) {
+        final c = count[b]!.compareTo(count[a]!);
+        return c != 0 ? c : latest[b]!.eatenAt.compareTo(latest[a]!.eatenAt);
+      });
+    return keys.take(max).map((k) => latest[k]!).toList();
+  }
+
   Future<void> add(FoodLogEntry entry) async {
     _entries.add(entry);
     notifyListeners();

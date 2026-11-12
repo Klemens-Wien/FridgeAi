@@ -230,7 +230,35 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              for (var star = 1; star <= 5; star++)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  tooltip: '${s.yourRating}: $star',
+                  icon: Icon(
+                    star <= recipes.ratingOf(recipe.id)
+                        ? Icons.star
+                        : Icons.star_border,
+                    color: star <= recipes.ratingOf(recipe.id)
+                        ? scheme.warning
+                        : scheme.onSurfaceVariant,
+                  ),
+                  onPressed: () => recipes.rate(recipe, star),
+                ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  s.ratingHint,
+                  style: theme.textTheme.labelSmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           RecipeMetaChips(recipe: recipe),
           const SizedBox(height: 16),
           _TimesRow(recipe: recipe),

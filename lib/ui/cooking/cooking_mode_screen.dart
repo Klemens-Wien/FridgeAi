@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../l10n/strings.dart';
+import '../../logic/quantity.dart';
 import '../../logic/recipe_ranking.dart';
 import '../../logic/scaling.dart';
 import '../../models/recipe.dart';
@@ -149,42 +150,78 @@ class _CookingModeScreenState extends State<CookingModeScreen> {
     final s = context.s;
     final pantry = context.read<PantryStore>();
     final match = RecipeRanker(pantry.items).match(recipe);
-    final used = match.available.values.map((p) => p.name).toSet();
     await context
         .read<RecipeStore>()
         .recordCooked(rescuedItems: match.expiringUsed.length);
     if (!mounted) return;
-    if (used.isEmpty) {
+    final updates = pantryUpdatesFor(match, widget.servings, s.languageCode);
+    if (updates.isEmpty) {
       Navigator.pop(context);
       return;
     }
-    final remove = await showDialog<bool>(
+    // Known changes are applied by default; unclear ones only if ticked.
+    final apply = {
+      for (final u in updates) u.item.id: u.change != PantryChange.unknown,
+    };
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.restaurant, size: 40),
-        title: Text(s.cookingDoneTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(s.cookingDoneBody),
-            const SizedBox(height: 8),
-            Text(used.join(', '), style: Theme.of(ctx).textTheme.bodySmall),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          icon: const Icon(Icons.restaurant, size: 40),
+          title: Text(s.cookingDoneTitle),
+          contentPadding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(s.pantryUpdateBody),
+                ),
+                for (final u in updates)
+                  CheckboxListTile(
+                    dense: true,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    value: apply[u.item.id],
+                    onChanged: (v) =>
+                        setLocal(() => apply[u.item.id] = v ?? false),
+                    title: Text(u.item.name),
+                    subtitle: Text(switch (u.change) {
+                      PantryChange.reduced =>
+                        '${u.item.quantity} → ${u.newQuantity}',
+                      PantryChange.usedUp => s.pantryUsedUp,
+                      PantryChange.unknown => s.pantryUnknown,
+                    }),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(s.keepPantry),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(s.removeUsedFromPantry),
+            ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(s.keepPantry)),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(s.removeUsedFromPantry),
-          ),
-        ],
       ),
     );
-    if (remove == null || !mounted) return;
-    if (remove) {
-      await pantry.removeByNames(used);
-      if (mounted) showSnack(context, s.removedFromPantry(used.length));
+    if (confirmed == null || !mounted) return;
+    if (confirmed) {
+      var changed = 0;
+      for (final u in updates.where((u) => apply[u.item.id] ?? false)) {
+        if (u.change == PantryChange.reduced) {
+          await pantry.update(u.item.copyWith(quantity: u.newQuantity));
+        } else {
+          await pantry.remove(u.item.id);
+        }
+        changed++;
+      }
+      if (mounted && changed > 0) showSnack(context, s.pantryUpdated);
     }
     if (mounted) Navigator.pop(context);
   }

@@ -84,9 +84,34 @@ Guidelines:
 - If no food is visible, return an empty list.
 ''';
 
+  static String receiptSystemPrompt(String languageCode) => '''
+You are the receipt reader of FridgeChef, a cooking app. The user
+photographs a supermarket receipt (possibly in several photos of one long
+receipt) so that the groceries they just bought land in their pantry list.
+The list is shown to the user for review and editing.
+
+Guidelines:
+- Return one entry per food or drink product. Skip non-food lines
+  (bags, deposits, household goods, discounts, totals, payment lines).
+- Receipts abbreviate heavily ("BIO VOLLM 3,5%", "TOM RISPE"). Expand each
+  line into the short, generic grocery name a shopper would write on a list
+  ("Milk", "Vine tomatoes"), without brand names, in
+  ${_languageName(languageCode)}.
+- quantity: what the receipt states (weight, volume, count such as "2 x");
+  use an empty string if it states none.
+- Merge repeated lines of the same product into one entry and add up the
+  count.
+- confidence: "low" when you are guessing what an abbreviation means.
+- shelfLifeDays: a typical shelf life in days for a freshly bought item of
+  this kind (fresh herbs 4, milk 7, hard cheese 21, canned goods 365).
+  Use 0 if it does not make sense.
+- If the photo shows no readable receipt, return an empty list.
+''';
+
   Future<List<DetectedIngredient>> detectIngredients(
     List<Uint8List> photos, {
     required String languageCode,
+    bool receipt = false,
   }) async {
     final content = <Map<String, dynamic>>[];
     for (var i = 0; i < photos.length; i++) {
@@ -96,11 +121,15 @@ Guidelines:
         ..add(ClaudeClient.imageBlock(detectImageMediaType(bytes), base64Encode(bytes)));
     }
     content.add(ClaudeClient.textBlock(
-      'List the food items visible in ${photos.length == 1 ? 'this photo' : 'these ${photos.length} photos'}.',
+      receipt
+          ? 'List the food items bought on this receipt.'
+          : 'List the food items visible in ${photos.length == 1 ? 'this photo' : 'these ${photos.length} photos'}.',
     ));
 
     final json = await client.createJson(
-      system: ingredientSystemPrompt(languageCode),
+      system: receipt
+          ? receiptSystemPrompt(languageCode)
+          : ingredientSystemPrompt(languageCode),
       content: content,
       schema: ingredientSchema,
       effort: 'medium',
@@ -254,6 +283,8 @@ How the app uses your output:
     required int count,
     List<String> avoidTitles = const [],
     List<String> avoidIngredients = const [],
+    List<String> likedTitles = const [],
+    List<String> dislikedTitles = const [],
     String wish = '',
     DateTime? now,
   }) {
@@ -298,6 +329,12 @@ How the app uses your output:
       if (avoidIngredients.isNotEmpty)
         '- Never use these ingredients or anything containing them (allergy '
             'or strong dislike): ${avoidIngredients.join(', ')}',
+      if (likedTitles.isNotEmpty)
+        '- Recipes I rated highly (suggest things in a similar spirit, but '
+            'not the same dishes): ${likedTitles.join('; ')}',
+      if (dislikedTitles.isNotEmpty)
+        '- Recipes I did not like (steer away from this style): '
+            '${dislikedTitles.join('; ')}',
       if (wish.trim().isNotEmpty)
         '- What I feel like today (follow this as far as the pantry allows): '
             '${wish.trim()}',
@@ -316,6 +353,8 @@ How the app uses your output:
     bool prioritizeExpiring = true,
     List<String> avoidTitles = const [],
     List<String> avoidIngredients = const [],
+    List<String> likedTitles = const [],
+    List<String> dislikedTitles = const [],
     String wish = '',
     int count = AppConfig.recipesPerRequest,
   }) async {
@@ -330,6 +369,8 @@ How the app uses your output:
           count: count,
           avoidTitles: avoidTitles,
           avoidIngredients: avoidIngredients,
+          likedTitles: likedTitles,
+          dislikedTitles: dislikedTitles,
           wish: wish,
         )),
       ],
@@ -348,6 +389,62 @@ How the app uses your output:
           .map((r) => Recipe.fromJson(r, languageCode: languageCode))
           .where((r) => r.title.isNotEmpty && r.ingredients.isNotEmpty)
           .toList();
+
+  // ---------------------------------------------------------------------------
+  // Importing the user's own recipes
+  // ---------------------------------------------------------------------------
+
+  static String importSystemPrompt(String languageCode) => '''
+You bring a user's own recipe into FridgeChef, a cooking app. The recipe
+arrives as typed or pasted text and/or photos (a cookbook page, a
+handwritten card, a screenshot). Return it in the app's recipe format.
+
+- Transcribe faithfully: keep the dish, ingredients, amounts and method as
+  given. Do not invent ingredients or steps; only tidy up wording and split
+  the method into one action per step.
+- If the servings are not stated, estimate them from the amounts.
+- If times or difficulty are not stated, estimate them sensibly.
+- "pantryItem": the exact name of the matching item from the user's pantry
+  list, copied verbatim, or "" if there is none.
+- "isStaple": true only for basics almost every kitchen has (salt, pepper,
+  oil, water, sugar, flour, vinegar, common dried spices).
+- "amount" is a number (0 = to taste), "unit" a short unit or "".
+- "timerSeconds": the waiting time of a step if it names one, else 0.
+- nutrition: your best estimate per serving; the app labels it an estimate.
+- Diet flags must be accurate for the recipe as written.
+- Write everything in ${_languageName(languageCode)}, translating if the
+  source is in another language.
+- Return exactly one recipe. If the input contains no recipe, return an
+  empty list.
+''';
+
+  /// Parses a recipe from free text and/or photos. Returns null if the
+  /// input did not contain a recipe.
+  Future<Recipe?> importRecipe({
+    String text = '',
+    List<Uint8List> photos = const [],
+    required List<PantryItem> pantry,
+    required String languageCode,
+  }) async {
+    final content = <Map<String, dynamic>>[
+      for (final p in photos)
+        ClaudeClient.imageBlock(detectImageMediaType(p), base64Encode(p)),
+      ClaudeClient.textBlock([
+        if (text.trim().isNotEmpty) 'My recipe:\n${text.trim()}',
+        if (text.trim().isEmpty) 'My recipe is in the photo(s).',
+        '',
+        'My pantry: ${pantry.isEmpty ? '(empty)' : pantry.map((p) => p.name).join(', ')}',
+      ].join('\n')),
+    ];
+    final json = await client.createJson(
+      system: importSystemPrompt(languageCode),
+      content: content,
+      schema: recipeSchema,
+      effort: 'low',
+    );
+    final recipes = parseRecipes(json, languageCode: languageCode);
+    return recipes.isEmpty ? null : recipes.first;
+  }
 
   // ---------------------------------------------------------------------------
   // Ingredient substitutes

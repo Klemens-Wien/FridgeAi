@@ -146,6 +146,8 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
 
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -200));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Mozzarella'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ersatz finden'));
@@ -166,7 +168,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Fertig'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Aus Vorrat entfernen'));
+    await tester.tap(find.text('Vorrat aktualisieren'));
     await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();

@@ -27,6 +27,15 @@ class MealPlanStore extends ChangeNotifier {
       .where((e) => e.date == dateOnly(day) && e.slot == slot)
       .toList();
 
+  /// All meals planned for [day], in slot order.
+  List<MealPlanEntry> entriesOn(DateTime day) => [
+        for (final slot in MealSlot.values) ...entriesFor(day, slot),
+      ];
+
+  /// Estimated calories of [day]'s plan, counting one serving per meal.
+  double plannedCalories(DateTime day) => entriesOn(day)
+      .fold(0, (sum, e) => sum + e.recipe.nutrition.calories);
+
   List<MealPlanEntry> entriesInWeek(DateTime weekStart) {
     final start = dateOnly(weekStart);
     final end = start.add(const Duration(days: 7));

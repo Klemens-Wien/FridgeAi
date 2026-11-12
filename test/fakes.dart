@@ -131,6 +131,9 @@ final sampleSubstitutes = {
 class FakeClaude {
   final List<Map<String, dynamic>> requests = [];
 
+  /// Recipes returned for the next recipe-shaped request (null = samples).
+  Map<String, dynamic>? nextRecipes;
+
   late final MockClient http = MockClient((req) async {
     final body = jsonDecode(req.body) as Map<String, dynamic>;
     requests.add(body);
@@ -139,7 +142,9 @@ class FakeClaude {
     if (props.containsKey('substitutes')) return messageResponse(sampleSubstitutes);
     if (props.containsKey('calories')) return messageResponse(sampleMealEstimate);
     return messageResponse(
-      props.containsKey('recipes') ? sampleRecipes : sampleIngredients,
+      props.containsKey('recipes')
+          ? (nextRecipes ?? sampleRecipes)
+          : sampleIngredients,
     );
   });
 

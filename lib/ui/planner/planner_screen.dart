@@ -135,7 +135,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
                     children: [
                       Text(
                         '${fmtDay.format(day)}, ${fmtShort.format(day)}'
-                        '${isToday ? ' · ${s.today}' : ''}',
+                        '${isToday ? ' · ${s.today}' : ''}'
+                        '${plan.plannedCalories(day) > 0 ? ' · ${s.plannedKcal(plan.plannedCalories(day).round())}' : ''}',
                         style: theme.textTheme.titleSmall?.copyWith(
                           color: isToday ? theme.colorScheme.primary : null,
                         ),
@@ -242,19 +243,24 @@ class _RecipePicker extends StatelessWidget {
     final store = context.watch<RecipeStore>();
     final tabs = <(String, List<Recipe>)>[
       (s.fromFavorites, store.favorites),
+      (s.ownRecipes, store.own),
       (s.fromSuggestions, store.suggestions),
       (s.fromHistory, store.history.map((h) => h.recipe).toList()),
     ];
 
     return DefaultTabController(
       length: tabs.length,
-      initialIndex: store.favorites.isEmpty && store.suggestions.isNotEmpty ? 1 : 0,
+      initialIndex: store.favorites.isEmpty && store.suggestions.isNotEmpty ? 2 : 0,
       child: SizedBox(
         height: MediaQuery.sizeOf(context).height * 0.7,
         child: Column(
           children: [
             Text(s.pickRecipe, style: Theme.of(context).textTheme.titleLarge),
-            TabBar(tabs: [for (final t in tabs) Tab(text: t.$1)]),
+            TabBar(
+              isScrollable: true,
+              tabAlignment: TabAlignment.center,
+              tabs: [for (final t in tabs) Tab(text: t.$1)],
+            ),
             Expanded(
               child: TabBarView(
                 children: [

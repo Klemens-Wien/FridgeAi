@@ -154,6 +154,7 @@ class _EntrySheetState extends State<_EntrySheet> {
     final s = context.s;
     final theme = Theme.of(context);
     final numbers = [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))];
+    final frequent = context.watch<FoodLogStore>().frequent();
 
     Widget gramField(TextEditingController c, String label) => Expanded(
           child: TextFormField(
@@ -183,6 +184,33 @@ class _EntrySheetState extends State<_EntrySheet> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(s.newEntry, style: theme.textTheme.titleLarge),
+              if (frequent.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(s.frequentMeals, style: theme.textTheme.labelLarge),
+                const SizedBox(height: 4),
+                SizedBox(
+                  height: 40,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: frequent.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (_, i) => ActionChip(
+                      label: Text(
+                        '${frequent[i].name} · ${frequent[i].calories.round()}',
+                      ),
+                      onPressed: () => setState(() {
+                        final f = frequent[i];
+                        _name.text = f.name;
+                        _kcal.text = '${f.calories.round()}';
+                        _protein.text = '${f.proteinG.round()}';
+                        _carbs.text = '${f.carbsG.round()}';
+                        _fat.text = '${f.fatG.round()}';
+                        _estimated = f.estimated;
+                      }),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               TextFormField(
                 controller: _name,
@@ -263,7 +291,7 @@ class _EntrySheetState extends State<_EntrySheet> {
                 children: [
                   gramField(_protein, s.protein),
                   const SizedBox(width: 8),
-                  gramField(_carbs, s.carbs),
+                  gramField(_carbs, s.carbsShort),
                   const SizedBox(width: 8),
                   gramField(_fat, s.fat),
                 ],

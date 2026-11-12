@@ -23,6 +23,7 @@ class _ScanScreenState extends State<ScanScreen> {
   final _picker = ImagePicker();
   final List<Uint8List> _photos = [];
   bool _busy = false;
+  bool _receipt = false;
   ClaudeException? _error;
 
   int get _remaining => AppConfig.maxPhotos - _photos.length;
@@ -85,7 +86,7 @@ class _ScanScreenState extends State<ScanScreen> {
     });
     try {
       final detected = await factory(settings.effectiveApiKey)
-          .detectIngredients(_photos, languageCode: lang);
+          .detectIngredients(_photos, languageCode: lang, receipt: _receipt);
       if (!mounted) return;
       await Navigator.pushReplacement(
         context,
@@ -120,7 +121,31 @@ class _ScanScreenState extends State<ScanScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      Text(s.scanHint, style: theme.textTheme.bodyMedium),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SegmentedButton<bool>(
+                          segments: [
+                            ButtonSegment(
+                              value: false,
+                              icon: const Icon(Icons.kitchen_outlined),
+                              label: Text(s.scanModeFridge),
+                            ),
+                            ButtonSegment(
+                              value: true,
+                              icon: const Icon(Icons.receipt_long_outlined),
+                              label: Text(s.scanModeReceipt),
+                            ),
+                          ],
+                          selected: {_receipt},
+                          onSelectionChanged: (v) =>
+                              setState(() => _receipt = v.first),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        _receipt ? s.receiptHint : s.scanHint,
+                        style: theme.textTheme.bodyMedium,
+                      ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -176,7 +201,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     child: FilledButton.icon(
                       onPressed: _photos.isEmpty ? null : _analyze,
                       icon: const Icon(Icons.auto_awesome),
-                      label: Text(s.analyze),
+                      label: Text(_receipt ? s.analyzeReceipt : s.analyze),
                     ),
                   ),
                 ),

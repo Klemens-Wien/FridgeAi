@@ -24,12 +24,41 @@ class HistoryEntry {
       );
 }
 
+class RecipeRating {
+  RecipeRating(this.recipeId, this.title, this.stars, [DateTime? ratedAt])
+      : ratedAt = ratedAt ?? DateTime.now();
+
+  final String recipeId;
+  final String title;
+  final int stars;
+  final DateTime ratedAt;
+
+  Map<String, dynamic> toJson() => {
+        'recipeId': recipeId,
+        'title': title,
+        'stars': stars,
+        'ratedAt': ratedAt.toIso8601String(),
+      };
+
+  factory RecipeRating.fromJson(Map<String, dynamic> json) => RecipeRating(
+        json['recipeId'] as String? ?? '',
+        json['title'] as String? ?? '',
+        (json['stars'] as num?)?.toInt() ?? 0,
+        DateTime.tryParse(json['ratedAt'] as String? ?? ''),
+      );
+}
+
 /// Recipe suggestions, favourites and the "recently viewed/cooked" history.
 class RecipeStore extends ChangeNotifier {
   RecipeStore(this._store, this._aiFactory) {
     _suggestions = _store.readList(_kSuggestions, Recipe.fromJson);
     _favorites = _store.readList(_kFavorites, Recipe.fromJson);
     _history = _store.readList(_kHistory, HistoryEntry.fromJson);
+    _own = _store.readList(_kOwn, Recipe.fromJson);
+    _ratings = {
+      for (final r in _store.readList(_kRatings, RecipeRating.fromJson))
+        r.recipeId: r,
+    };
     _cookedCount = _store.getInt(_kCooked) ?? 0;
     _rescuedCount = _store.getInt(_kRescued) ?? 0;
   }
@@ -40,6 +69,8 @@ class RecipeStore extends ChangeNotifier {
   static const _kSuggestions = 'recipes.suggestions';
   static const _kFavorites = 'recipes.favorites';
   static const _kHistory = 'recipes.history';
+  static const _kOwn = 'recipes.own';
+  static const _kRatings = 'recipes.ratings';
   static const _kCooked = 'stats.cooked';
   static const _kRescued = 'stats.rescued';
   static const maxHistory = 50;
@@ -48,6 +79,8 @@ class RecipeStore extends ChangeNotifier {
   late List<Recipe> _favorites;
   late List<HistoryEntry> _history;
 
+  late List<Recipe> _own;
+  late Map<String, RecipeRating> _ratings;
   late int _cookedCount;
   late int _rescuedCount;
   bool _loading = false;
@@ -56,6 +89,47 @@ class RecipeStore extends ChangeNotifier {
   List<Recipe> get suggestions => List.unmodifiable(_suggestions);
   List<Recipe> get favorites => List.unmodifiable(_favorites);
   List<HistoryEntry> get history => List.unmodifiable(_history);
+
+  /// Recipes the user imported themselves.
+  List<Recipe> get own => List.unmodifiable(_own);
+
+  Future<void> addOwn(Recipe recipe) async {
+    _own.insert(0, recipe);
+    notifyListeners();
+    await _store.writeList(_kOwn, _own, (r) => r.toJson());
+  }
+
+  Future<void> removeOwn(String id) async {
+    _own.removeWhere((r) => r.id == id);
+    notifyListeners();
+    await _store.writeList(_kOwn, _own, (r) => r.toJson());
+  }
+
+  /// Stars (1-5) the user gave [recipeId], or 0 if unrated.
+  int ratingOf(String recipeId) => _ratings[recipeId]?.stars ?? 0;
+
+  /// Sets the rating; the same star again clears it.
+  Future<void> rate(Recipe recipe, int stars) async {
+    if (ratingOf(recipe.id) == stars) {
+      _ratings.remove(recipe.id);
+    } else {
+      _ratings[recipe.id] = RecipeRating(recipe.id, recipe.title, stars);
+    }
+    notifyListeners();
+    await _store.writeList(_kRatings, _ratings.values, (r) => r.toJson());
+  }
+
+  /// Titles rated 4-5 stars (most recent first, at most [max]).
+  List<String> likedTitles({int max = 8}) => _titles((s) => s >= 4, max);
+
+  /// Titles rated 1-2 stars.
+  List<String> dislikedTitles({int max = 8}) => _titles((s) => s <= 2, max);
+
+  List<String> _titles(bool Function(int) test, int max) {
+    final hits = _ratings.values.where((r) => test(r.stars)).toList()
+      ..sort((a, b) => b.ratedAt.compareTo(a.ratedAt));
+    return hits.take(max).map((r) => r.title).toList();
+  }
   /// Free-text craving for the next suggestions (not persisted).
   String wish = '';
 
@@ -108,6 +182,8 @@ class RecipeStore extends ChangeNotifier {
         prioritizeExpiring: prioritizeExpiring,
         avoidTitles: append ? _suggestions.map((r) => r.title).toList() : const [],
         avoidIngredients: avoidIngredients,
+        likedTitles: likedTitles(),
+        dislikedTitles: dislikedTitles(),
         wish: wish,
       );
       // Safety net: never show recipes that break the user's diet filters
@@ -129,7 +205,12 @@ class RecipeStore extends ChangeNotifier {
   }
 
   Recipe? findById(String id) {
-    for (final list in [_suggestions, _favorites, _history.map((h) => h.recipe)]) {
+    for (final list in [
+      _suggestions,
+      _favorites,
+      _own,
+      _history.map((h) => h.recipe),
+    ]) {
       for (final r in list) {
         if (r.id == id) return r;
       }

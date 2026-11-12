@@ -24,6 +24,13 @@ Flutter-App für **iOS und Android**: Kühlschrank fotografieren, die KI (Claude
 | **Kopieren/Teilen** | Rezept (mit skalierten Mengen) und Einkaufsliste als Text in die Zwischenablage. |
 | **Bilanz** | Zählt gekochte Gerichte und gerettete (bald ablaufende) Lebensmittel. |
 | **Kalorienzähler** | Tagebuch mit Tagesziel, Makros und 7-Tage-Übersicht. Einträge aus einem Rezept („Als gegessen eintragen“), von Hand oder per KI-Schätzung aus Beschreibung/Foto. |
+| **Kassenbon-Scan** | Bon fotografieren: die gekauften Lebensmittel landen (nach Prüfung) im Vorrat. |
+| **Mengen mitrechnen** | Nach dem Kochen zieht die App verbrauchte Mengen ab (g/kg, ml/l, Stück); Unklares entscheidest du. |
+| **Eigene Rezepte** | Rezept eintippen, einfügen oder aus dem Kochbuch fotografieren – Claude überträgt es ins App-Format. |
+| **Bewertungen** | 1–5 Sterne pro Rezept; gut und schlecht Bewertetes fließt in künftige Vorschläge ein. |
+| **Kalorienziel-Rechner** | Persönlicher Richtwert nach Mifflin-St-Jeor (Angaben werden nicht gespeichert). |
+| **Plan ↔ Kalorien** | Geplante Gerichte erscheinen im Kalorienzähler und lassen sich mit einem Tipp als gegessen eintragen; der Wochenplan zeigt die geplanten kcal pro Tag. |
+| **Häufige Mahlzeiten** | Oft Gegessenes mit einem Tipp erneut eintragen. |
 | **Darstellung** | Hell, Dunkel oder System (Material 3). Deutsch und Englisch (oder Systemsprache) – auch die KI antwortet in der gewählten Sprache. |
 
 Alle Daten bleiben lokal auf dem Gerät (SharedPreferences). Der API-Schlüssel liegt verschlüsselt im Keychain/Keystore.

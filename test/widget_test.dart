@@ -134,7 +134,7 @@ void main() {
     await tester.tap(find.text('Fertig'));
     await tester.pumpAndSettle();
     expect(find.text('Guten Appetit!'), findsOneWidget);
-    await tester.tap(find.text('Behalten'));
+    await tester.tap(find.text('Nichts ändern'));
     await tester.pumpAndSettle();
 
     // Back on the detail screen → back to the list → shopping tab.

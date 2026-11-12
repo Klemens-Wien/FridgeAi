@@ -7,8 +7,10 @@ import '../../l10n/strings.dart';
 import '../../models/food_log.dart';
 import '../../models/pantry_item.dart' show dateOnly;
 import '../../state/food_log_store.dart';
+import '../../state/meal_plan_store.dart';
 import '../widgets/common.dart';
 import 'entry_sheet.dart';
+import 'goal_sheet.dart';
 
 /// Calorie diary: one day at a time with goal ring, macros, the day's
 /// entries and a 7-day overview.
@@ -49,7 +51,10 @@ class _CalorieScreenState extends State<CalorieScreen> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(s.cancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, -1),
+              child: Text(s.calculateGoal),
+            ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, value),
               child: Text(s.save),
@@ -58,7 +63,11 @@ class _CalorieScreenState extends State<CalorieScreen> {
         ),
       ),
     );
-    if (result != null) await log.setGoal(result);
+    if (result == -1) {
+      if (mounted) await showGoalCalculator(context);
+    } else if (result != null) {
+      await log.setGoal(result);
+    }
   }
 
   @override
@@ -68,6 +77,7 @@ class _CalorieScreenState extends State<CalorieScreen> {
     final scheme = theme.colorScheme;
     final log = context.watch<FoodLogStore>();
     final entries = log.entriesFor(_day);
+    final planned = context.watch<MealPlanStore>().entriesOn(_day);
     final totals = DayTotals.of(entries);
     final fmtDay = DateFormat.MMMEd(s.languageCode);
     final time = DateFormat.Hm(s.languageCode);
@@ -184,6 +194,38 @@ class _CalorieScreenState extends State<CalorieScreen> {
                 ),
               ),
             ),
+          if (planned.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(s.plannedToday, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            for (final p in planned)
+              Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                color: scheme.surfaceContainerHigh,
+                child: ListTile(
+                  leading: const Icon(Icons.event_note_outlined),
+                  title: Text(p.recipe.title),
+                  subtitle: Text(
+                    '${s.slotName(p.slot)} · ≈ ${p.recipe.nutrition.calories.round()} kcal',
+                  ),
+                  trailing: OutlinedButton(
+                    onPressed: () {
+                      final n = p.recipe.nutrition;
+                      log.add(FoodLogEntry(
+                        name: p.recipe.title,
+                        calories: n.calories,
+                        proteinG: n.proteinG,
+                        carbsG: n.carbsG,
+                        fatG: n.fatG,
+                        estimated: true,
+                        eatenAt: entryTimeFor(_day),
+                      ));
+                    },
+                    child: Text(s.eaten),
+                  ),
+                ),
+              ),
+          ],
           const SizedBox(height: 16),
           Text(s.last7Days, style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),

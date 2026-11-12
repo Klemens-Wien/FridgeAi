@@ -5,6 +5,7 @@ import '../../l10n/strings.dart';
 import '../../state/food_log_store.dart';
 import '../../state/recipe_store.dart';
 import '../calories/calorie_screen.dart';
+import 'own_recipes_screen.dart';
 import 'recipe_list_screen.dart';
 import 'settings_screen.dart';
 
@@ -73,6 +74,12 @@ class MoreScreen extends StatelessWidget {
             onTap: () => push(const FavoritesScreen()),
           ),
           ListTile(
+            leading: const Icon(Icons.menu_book_outlined),
+            title: Text(s.ownRecipes),
+            trailing: Text('${store.own.length}'),
+            onTap: () => push(const OwnRecipesScreen()),
+          ),
+          ListTile(
             leading: const Icon(Icons.history),
             title: Text(s.history),
             trailing: Text('${store.history.length}'),
@@ -90,7 +97,7 @@ class MoreScreen extends StatelessWidget {
             onTap: () => showAboutDialog(
               context: context,
               applicationName: s.appName,
-              applicationVersion: '1.2.0',
+              applicationVersion: '1.3.0',
               applicationIcon: const Icon(Icons.kitchen, size: 40),
               children: [
                 Text(s.aboutBody),

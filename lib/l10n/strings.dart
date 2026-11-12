@@ -282,6 +282,52 @@ abstract class S {
   String get estimatedValue;
   String get calorieDisclaimer;
 
+  // Round 3
+  String get scanModeFridge;
+  String get scanModeReceipt;
+  String get receiptHint;
+  String get analyzeReceipt;
+  String get pantryUpdateBody;
+  String get pantryUsedUp;
+  String get pantryUnknown;
+  String get pantryUpdated;
+  String get calculateGoal;
+  String get sex;
+  String get female;
+  String get male;
+  String get age;
+  String get heightCm;
+  String get weightKg;
+  String get activity;
+  String get activitySedentary;
+  String get activityLight;
+  String get activityModerate;
+  String get activityActive;
+  String get aim;
+  String get aimLose;
+  String get aimMaintain;
+  String get aimGain;
+  String get goalFormulaNote;
+  String get useThisGoal;
+  String get fillAllFields;
+  String get plannedToday;
+  String get eaten;
+  String get frequentMeals;
+  String get ownRecipes;
+  String get ownRecipesEmpty;
+  String get importRecipe;
+  String get importHint;
+  String get importing;
+  String get importFailed;
+  String get importNeedsInput;
+  String get recipeImported;
+  String get yourRating;
+  String get ratingHint;
+  String plannedKcal(int kcal);
+  String photosAdded(int n);
+
+  String get carbsShort;
+
   // Errors
   String get errorTitle;
   String errorMessage(ClaudeErrorKind kind);
