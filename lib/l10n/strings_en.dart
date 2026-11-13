@@ -707,6 +707,140 @@ class StringsEn extends S {
   String get carbsShort => 'Carbs';
 
   @override
+  String get proTitle =>
+      'FridgeChef Pro';
+  @override
+  String get proActive =>
+      'Pro is active';
+  @override
+  String get proTagline =>
+      'Get more out of your fridge';
+  @override
+  String get proUnlimited =>
+      'Unlimited AI requests';
+  @override
+  String get proUnlimitedSub =>
+      'Scan and get recipes as often as you like';
+  @override
+  String get proWeekPlan =>
+      'Automatic meal plan';
+  @override
+  String get proWeekPlanSub =>
+      'AI plans your dinners from the pantry';
+  @override
+  String get proReceipt =>
+      'Receipt scan';
+  @override
+  String get proReceiptSub =>
+      'Groceries into the pantry by photo';
+  @override
+  String get proImport =>
+      'Import your own recipes';
+  @override
+  String get proImportSub =>
+      'From text or a cookbook photo';
+  @override
+  String get proEstimate =>
+      'AI calorie estimate';
+  @override
+  String get proEstimateSub =>
+      'Describe or photograph a meal';
+  @override
+  String get proSubstitutes =>
+      'Substitutes for missing ingredients';
+  @override
+  String get proSubstitutesSub =>
+      'Alternatives from your pantry';
+  @override
+  String get proUnlock =>
+      'Unlock Pro';
+  @override
+  String get proUnlockNote =>
+      'Free in this preview – nothing is charged. Store purchase will follow.';
+  @override
+  String get proDeactivate =>
+      'Switch to the free version';
+  @override
+  String get proFeatureLocked =>
+      'This is a Pro feature.';
+  @override
+  String get proLimitReached =>
+      "You have used up today's free AI requests.";
+  @override
+  String get proWelcome =>
+      'Welcome to Pro!';
+  @override
+  String get freePlan =>
+      'Free version';
+  @override
+  String get autoPlanWeek =>
+      'Plan the week automatically';
+  @override
+  String get autoPlanning =>
+      'Planning your week …';
+  @override
+  String get autoPlanFull =>
+      'All dinners this week are already planned.';
+  @override
+  String get water =>
+      'Water';
+  @override
+  String get onboardingSkip =>
+      'Skip';
+  @override
+  String get onboardingStart =>
+      'Get started';
+  @override
+  String get onb1Title =>
+      'Photograph your fridge';
+  @override
+  String get onb1Body =>
+      'The AI recognises your food – or simply scan your receipt.';
+  @override
+  String get onb2Title =>
+      'Cook what you have';
+  @override
+  String get onb2Body =>
+      'Recipes that use as much of your pantry as possible, expiring items first.';
+  @override
+  String get onb3Title =>
+      'Plan and keep track';
+  @override
+  String get onb3Body =>
+      'Meal plan, shopping list and calorie counter work together.';
+  @override
+  String get todayTitle =>
+      'Today';
+  @override
+  String get statInPantry =>
+      'in pantry';
+  @override
+  String get statExpiring =>
+      'expiring soon';
+  @override
+  String get statKcalToday =>
+      'kcal today';
+  @override
+  String get goodMorning =>
+      'Good morning';
+  @override
+  String get goodDay =>
+      'Hello';
+  @override
+  String get goodEvening =>
+      'Good evening';
+  @override
+  String freeRequestsLeft(int left, int total) =>
+      '$left of $total free AI requests left today';
+  @override
+  String autoPlanDone(int n) =>
+      n == 1 ? '1 dinner planned' : '$n dinners planned';
+  @override
+  String waterGlasses(int n, int goal) => '$n of $goal glasses';
+  @override
+  String tonight(String title) => 'Planned today: $title';
+
+  @override
   String get errorTitle => 'Something went wrong';
   @override
   String errorMessage(ClaudeErrorKind kind) => switch (kind) {

@@ -7,8 +7,10 @@ import '../../config.dart';
 import '../../l10n/strings.dart';
 import '../../services/claude_client.dart';
 import '../../services/image_utils.dart';
+import '../../state/pro_store.dart';
 import '../../state/recipe_store.dart';
 import '../../state/settings_store.dart';
+import '../pro/pro_gate.dart';
 import '../widgets/common.dart';
 import 'review_screen.dart';
 
@@ -77,6 +79,10 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Future<void> _analyze() async {
+    // Receipt scan is Pro; a fridge scan counts against the free allowance.
+    final allowed =
+        _receipt ? await ensurePro(context) : await useAiQuota(context);
+    if (!allowed || !mounted) return;
     final settings = context.read<SettingsStore>();
     final factory = context.read<AiServiceFactory>();
     final lang = context.s.languageCode;
@@ -109,6 +115,7 @@ class _ScanScreenState extends State<ScanScreen> {
     final s = context.s;
     final theme = Theme.of(context);
     final hasKey = context.select<SettingsStore, bool>((s) => s.hasApiKey);
+    final isPro = context.select<ProStore, bool>((p) => p.isPro);
 
     return Scaffold(
       appBar: AppBar(title: Text(s.scanTitle)),
@@ -133,7 +140,16 @@ class _ScanScreenState extends State<ScanScreen> {
                             ButtonSegment(
                               value: true,
                               icon: const Icon(Icons.receipt_long_outlined),
-                              label: Text(s.scanModeReceipt),
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Flexible(child: Text(s.scanModeReceipt)),
+                                  if (!isPro) ...[
+                                    const SizedBox(width: 6),
+                                    const ProBadge(),
+                                  ],
+                                ],
+                              ),
                             ),
                           ],
                           selected: {_receipt},

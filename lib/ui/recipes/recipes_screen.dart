@@ -6,14 +6,22 @@ import '../../logic/recipe_ranking.dart';
 import '../../state/pantry_store.dart';
 import '../../state/recipe_store.dart';
 import '../../state/settings_store.dart';
+import '../pro/pro_gate.dart';
 import '../widgets/common.dart';
 import 'filter_sheet.dart';
 import 'recipe_card.dart';
 
 /// Requests recipe suggestions for the current pantry, filters and language.
-Future<void> generateRecipes(BuildContext context, {bool append = false}) {
+Future<void> generateRecipes(
+  BuildContext context, {
+  bool append = false,
+}) async {
+  final store = context.read<RecipeStore>();
+  if (store.loading) return;
+  // Free tier: counts against the daily AI allowance.
+  if (!await useAiQuota(context) || !context.mounted) return;
   final settings = context.read<SettingsStore>();
-  return context.read<RecipeStore>().generate(
+  return store.generate(
         apiKey: settings.effectiveApiKey,
         pantry: context.read<PantryStore>().items,
         filters: settings.filters,
@@ -21,7 +29,7 @@ Future<void> generateRecipes(BuildContext context, {bool append = false}) {
         servings: settings.defaultServings,
         prioritizeExpiring: settings.prioritizeExpiring,
         avoidIngredients: settings.avoidIngredients,
-        wish: context.read<RecipeStore>().wish,
+        wish: store.wish,
         append: append,
       );
 }

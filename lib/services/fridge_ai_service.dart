@@ -174,6 +174,10 @@ Guidelines:
               'type': 'string',
               'enum': Difficulty.values.map((d) => d.name).toList(),
             },
+            'kind': {
+              'type': 'string',
+              'enum': RecipeKind.values.map((k) => k.name).toList(),
+            },
             'vegetarian': {'type': 'boolean'},
             'vegan': {'type': 'boolean'},
             'glutenFree': {'type': 'boolean'},
@@ -225,6 +229,7 @@ Guidelines:
             'prepMinutes',
             'cookMinutes',
             'difficulty',
+            'kind',
             'vegetarian',
             'vegan',
             'glutenFree',
@@ -264,6 +269,8 @@ How the app uses your output:
   otherwise 0.
 - nutrition: your best estimate PER SERVING (kcal and grams). The app labels
   it as an estimate.
+- "kind" is the dish type that fits best (it picks the picture on the
+  recipe card); use "other" if none fits.
 - Diet flags must be accurate for the recipe as written: vegan implies
   vegetarian; glutenFree only if no ingredient normally contains gluten;
   lowCarb if roughly under 20 g carbohydrates per serving.
@@ -286,6 +293,7 @@ How the app uses your output:
     List<String> likedTitles = const [],
     List<String> dislikedTitles = const [],
     String wish = '',
+    String note = '',
     DateTime? now,
   }) {
     final today = now ?? DateTime.now();
@@ -338,6 +346,7 @@ How the app uses your output:
       if (wish.trim().isNotEmpty)
         '- What I feel like today (follow this as far as the pantry allows): '
             '${wish.trim()}',
+      if (note.isNotEmpty) '- $note',
       if (avoidTitles.isNotEmpty)
         '- Do not repeat these recipes I have already seen: ${avoidTitles.join('; ')}',
       '',
@@ -356,6 +365,7 @@ How the app uses your output:
     List<String> likedTitles = const [],
     List<String> dislikedTitles = const [],
     String wish = '',
+    String note = '',
     int count = AppConfig.recipesPerRequest,
   }) async {
     final json = await client.createJson(
@@ -372,6 +382,7 @@ How the app uses your output:
           likedTitles: likedTitles,
           dislikedTitles: dislikedTitles,
           wish: wish,
+          note: note,
         )),
       ],
       schema: recipeSchema,
@@ -389,6 +400,14 @@ How the app uses your output:
           .map((r) => Recipe.fromJson(r, languageCode: languageCode))
           .where((r) => r.title.isNotEmpty && r.ingredients.isNotEmpty)
           .toList();
+
+  /// Instruction that turns a normal suggestion request into a week of
+  /// dinners, ordered so that food expiring soonest is cooked first.
+  static const weekPlanNote =
+      'These recipes are the dinners for the coming days, in the order they '
+      'will be cooked: put recipes that use the soonest-expiring items first, '
+      'spread the pantry across the days so each item is only used as far as '
+      'its quantity allows, and vary the dishes from day to day.';
 
   // ---------------------------------------------------------------------------
   // Importing the user's own recipes

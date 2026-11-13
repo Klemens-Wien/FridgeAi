@@ -328,6 +328,53 @@ abstract class S {
 
   String get carbsShort;
 
+  // Pro, onboarding, dashboard
+  String get proTitle;
+  String get proActive;
+  String get proTagline;
+  String get proUnlimited;
+  String get proUnlimitedSub;
+  String get proWeekPlan;
+  String get proWeekPlanSub;
+  String get proReceipt;
+  String get proReceiptSub;
+  String get proImport;
+  String get proImportSub;
+  String get proEstimate;
+  String get proEstimateSub;
+  String get proSubstitutes;
+  String get proSubstitutesSub;
+  String get proUnlock;
+  String get proUnlockNote;
+  String get proDeactivate;
+  String get proFeatureLocked;
+  String get proLimitReached;
+  String get proWelcome;
+  String get freePlan;
+  String get autoPlanWeek;
+  String get autoPlanning;
+  String get autoPlanFull;
+  String get water;
+  String get onboardingSkip;
+  String get onboardingStart;
+  String get onb1Title;
+  String get onb1Body;
+  String get onb2Title;
+  String get onb2Body;
+  String get onb3Title;
+  String get onb3Body;
+  String get todayTitle;
+  String get statInPantry;
+  String get statExpiring;
+  String get statKcalToday;
+  String get goodMorning;
+  String get goodDay;
+  String get goodEvening;
+  String freeRequestsLeft(int left, int total);
+  String autoPlanDone(int n);
+  String waterGlasses(int n, int goal);
+  String tonight(String title);
+
   // Errors
   String get errorTitle;
   String errorMessage(ClaudeErrorKind kind);

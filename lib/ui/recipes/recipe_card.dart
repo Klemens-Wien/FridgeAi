@@ -4,6 +4,7 @@ import '../../app.dart';
 import '../../l10n/strings.dart';
 import '../../logic/recipe_ranking.dart';
 import '../widgets/common.dart';
+import '../widgets/recipe_art.dart';
 import 'recipe_detail_screen.dart';
 
 class RecipeCard extends StatelessWidget {
@@ -30,17 +31,31 @@ class RecipeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(r.title, style: theme.textTheme.titleMedium),
-              if (r.description.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  r.description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(color: scheme.onSurfaceVariant),
-                ),
-              ],
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RecipeArt(kind: r.kind),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(r.title, style: theme.textTheme.titleMedium),
+                        if (r.description.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            r.description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 10),
               RecipeMetaChips(recipe: r, dense: true),
               const SizedBox(height: 12),

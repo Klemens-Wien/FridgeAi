@@ -13,6 +13,7 @@ import '../../services/image_utils.dart';
 import '../../state/food_log_store.dart';
 import '../../state/recipe_store.dart';
 import '../../state/settings_store.dart';
+import '../pro/pro_gate.dart';
 import '../widgets/common.dart';
 
 /// Bottom sheet to log a meal for [day]: type the values, or describe the
@@ -96,6 +97,7 @@ class _EntrySheetState extends State<_EntrySheet> {
       setState(() => _hint = s.estimateNeedsInput);
       return;
     }
+    if (!await ensurePro(context) || !mounted) return;
     final settings = context.read<SettingsStore>();
     final factory = context.read<AiServiceFactory>();
     FocusScope.of(context).unfocus();

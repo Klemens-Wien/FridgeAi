@@ -17,6 +17,7 @@ class SettingsStore extends ChangeNotifier {
     _filters = f == null ? const RecipeFilters() : RecipeFilters.fromJson(f);
     _avoidIngredients = _store.getStringList(_kAvoid);
     _groupPantry = _store.getBool(_kGroupPantry) ?? false;
+    _onboardingDone = _store.getBool(_kOnboarding) ?? false;
   }
 
   final LocalStore _store;
@@ -29,6 +30,7 @@ class SettingsStore extends ChangeNotifier {
   static const _kFilters = 'settings.filters';
   static const _kAvoid = 'settings.avoidIngredients';
   static const _kGroupPantry = 'settings.groupPantry';
+  static const _kOnboarding = 'settings.onboardingDone';
   static const supportedLanguages = ['de', 'en'];
 
   late ThemeMode _themeMode;
@@ -38,6 +40,7 @@ class SettingsStore extends ChangeNotifier {
   late RecipeFilters _filters;
   late List<String> _avoidIngredients;
   late bool _groupPantry;
+  late bool _onboardingDone;
   String? _userApiKey;
   bool _builtInAi = false;
 
@@ -53,6 +56,15 @@ class SettingsStore extends ChangeNotifier {
   /// Ingredients that must never appear in suggestions (allergies, dislikes).
   List<String> get avoidIngredients => List.unmodifiable(_avoidIngredients);
   bool get groupPantry => _groupPantry;
+
+  /// Whether the first-launch introduction has been seen.
+  bool get onboardingDone => _onboardingDone;
+
+  Future<void> completeOnboarding() async {
+    _onboardingDone = true;
+    notifyListeners();
+    await _store.setBool(_kOnboarding, true);
+  }
 
   Future<void> addAvoidIngredient(String name) async {
     final n = name.trim();

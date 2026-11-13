@@ -142,6 +142,58 @@ class _CalorieScreenState extends State<CalorieScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+              child: Row(
+                children: [
+                  Icon(Icons.water_drop, color: scheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(s.water, style: theme.textTheme.titleSmall),
+                        Text(
+                          s.waterGlasses(
+                            log.waterOn(_day),
+                            FoodLogStore.waterGoal,
+                          ),
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            minHeight: 6,
+                            value: (log.waterOn(_day) / FoodLogStore.waterGoal)
+                                .clamp(0, 1)
+                                .toDouble(),
+                            backgroundColor: scheme.surfaceContainerHighest,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: '${s.water} −',
+                    onPressed: log.waterOn(_day) > 0
+                        ? () => log.setWater(_day, log.waterOn(_day) - 1)
+                        : null,
+                    icon: const Icon(Icons.remove_circle_outline),
+                  ),
+                  IconButton(
+                    tooltip: '${s.water} +',
+                    onPressed: () => log.setWater(_day, log.waterOn(_day) + 1),
+                    icon: const Icon(Icons.add_circle),
+                    color: scheme.primary,
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 16),
           if (entries.isEmpty)
             Padding(

@@ -11,7 +11,11 @@ import '../../models/shopping_item.dart';
 import '../../state/meal_plan_store.dart';
 import '../../state/pantry_store.dart';
 import '../../state/recipe_store.dart';
+import '../../services/claude_client.dart';
+import '../../services/fridge_ai_service.dart';
+import '../../state/settings_store.dart';
 import '../../state/shopping_store.dart';
+import '../pro/pro_gate.dart';
 import '../recipes/recipe_detail_screen.dart';
 import '../widgets/common.dart';
 
@@ -27,6 +31,62 @@ class _PlannerScreenState extends State<PlannerScreen> {
 
   void _shiftWeek(int weeks) =>
       setState(() => _weekStart = _weekStart.add(Duration(days: 7 * weeks)));
+
+  bool _planning = false;
+
+  /// Pro: lets the AI fill the empty dinner slots of the shown week (from
+  /// today on) with recipes built around the pantry.
+  Future<void> _autoPlan() async {
+    final s = context.s;
+    final plan = context.read<MealPlanStore>();
+    final today = dateOnly(DateTime.now());
+    final free = [
+      for (var d = 0; d < 7; d++)
+        if (!_weekStart.add(Duration(days: d)).isBefore(today) &&
+            plan.entriesFor(_weekStart.add(Duration(days: d)), MealSlot.dinner).isEmpty)
+          _weekStart.add(Duration(days: d)),
+    ];
+    if (free.isEmpty) {
+      showSnack(context, s.autoPlanFull);
+      return;
+    }
+    if (!await ensurePro(context) || !mounted) return;
+    final settings = context.read<SettingsStore>();
+    final recipes = context.read<RecipeStore>();
+    final service = context.read<AiServiceFactory>()(settings.effectiveApiKey);
+    final pantry = context.read<PantryStore>().items;
+    setState(() => _planning = true);
+    try {
+      final result = await service.suggestRecipes(
+        pantry: pantry,
+        filters: settings.filters,
+        languageCode: s.languageCode,
+        servings: settings.defaultServings,
+        prioritizeExpiring: settings.prioritizeExpiring,
+        avoidIngredients: settings.avoidIngredients,
+        likedTitles: recipes.likedTitles(),
+        dislikedTitles: recipes.dislikedTitles(),
+        note: FridgeAiService.weekPlanNote,
+        count: free.length,
+      );
+      final usable = result
+          .where(settings.filters.matches)
+          .where((r) => !usesAvoidedIngredient(r, settings.avoidIngredients))
+          .toList();
+      var planned = 0;
+      for (var i = 0; i < free.length && i < usable.length; i++) {
+        await plan.add(free[i], MealSlot.dinner, usable[i]);
+        planned++;
+      }
+      if (mounted) showSnack(context, s.autoPlanDone(planned));
+    } on ClaudeException catch (e) {
+      if (mounted) showSnack(context, s.errorMessage(e.kind));
+    } catch (_) {
+      if (mounted) showSnack(context, s.errorMessage(ClaudeErrorKind.badResponse));
+    } finally {
+      if (mounted) setState(() => _planning = false);
+    }
+  }
 
   Future<void> _addWeekToShopping() async {
     final s = context.s;
@@ -73,6 +133,17 @@ class _PlannerScreenState extends State<PlannerScreen> {
       appBar: AppBar(
         title: Text(s.plannerTitle),
         actions: [
+          IconButton(
+            tooltip: s.autoPlanWeek,
+            onPressed: _planning ? null : _autoPlan,
+            icon: _planning
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.auto_awesome),
+          ),
           IconButton(
             tooltip: s.addWeekToShopping,
             onPressed: weekEntries.isEmpty ? null : _addWeekToShopping,

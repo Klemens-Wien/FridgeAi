@@ -9,6 +9,11 @@ class FoodLogStore extends ChangeNotifier {
   FoodLogStore(this._store) {
     _entries = _store.readList(_kEntries, FoodLogEntry.fromJson);
     _goal = _store.getInt(_kGoal) ?? defaultGoal;
+    final water = _store.readMap(_kWater) ?? const {};
+    _water = {
+      for (final e in water.entries)
+        if (e.value is num) e.key: (e.value as num).toInt(),
+    };
     // Keep roughly three months so storage does not grow forever.
     final cutoff = dateOnly(DateTime.now()).subtract(const Duration(days: 92));
     _entries.removeWhere((e) => e.day.isBefore(cutoff));
@@ -17,12 +22,17 @@ class FoodLogStore extends ChangeNotifier {
   final LocalStore _store;
   static const _kEntries = 'foodlog.entries';
   static const _kGoal = 'foodlog.goal';
+  static const _kWater = 'foodlog.water';
+
+  /// Glasses (à 250 ml) to aim for per day.
+  static const waterGoal = 8;
   static const defaultGoal = 2000;
   static const minGoal = 800;
   static const maxGoal = 6000;
 
   late List<FoodLogEntry> _entries;
   late int _goal;
+  late Map<String, int> _water;
 
   /// Daily calorie goal in kcal.
   int get goal => _goal;
@@ -69,6 +79,27 @@ class FoodLogStore extends ChangeNotifier {
         return c != 0 ? c : latest[b]!.eatenAt.compareTo(latest[a]!.eatenAt);
       });
     return keys.take(max).map((k) => latest[k]!).toList();
+  }
+
+  static String _dayKey(DateTime day) =>
+      dateOnly(day).toIso8601String().substring(0, 10);
+
+  /// Glasses of water logged on [day].
+  int waterOn(DateTime day) => _water[_dayKey(day)] ?? 0;
+
+  Future<void> setWater(DateTime day, int glasses) async {
+    final key = _dayKey(day);
+    final value = glasses.clamp(0, 30);
+    if (value == 0) {
+      _water.remove(key);
+    } else {
+      _water[key] = value;
+    }
+    // Same retention as the entries.
+    final cutoff = _dayKey(DateTime.now().subtract(const Duration(days: 92)));
+    _water.removeWhere((k, _) => k.compareTo(cutoff) < 0);
+    notifyListeners();
+    await _store.writeMap(_kWater, _water);
   }
 
   Future<void> add(FoodLogEntry entry) async {

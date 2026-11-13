@@ -12,6 +12,8 @@ Future<(FakeClaude, SettingsStore)> pumpApp(
   WidgetTester tester, {
   List<PantryItem> pantry = const [],
   String language = 'de',
+  bool pro = true,
+  bool onboarded = true,
 }) async {
   tester.view.physicalSize = const Size(1170, 2532);
   tester.view.devicePixelRatio = 3;
@@ -20,6 +22,8 @@ Future<(FakeClaude, SettingsStore)> pumpApp(
   SharedPreferences.setMockInitialValues({});
   final store = await LocalStore.open();
   await store.writeList('pantry.items', pantry, (p) => p.toJson());
+  await store.setBool('pro.active', pro);
+  await store.setBool('settings.onboardingDone', onboarded);
   final settings = SettingsStore(store, MemorySecretStore('sk-test'));
   await settings.loadSecrets();
   await settings.setLocaleCode(language);
@@ -66,7 +70,7 @@ void main() {
     ]);
 
     expect(find.text('Mein Vorrat'), findsOneWidget);
-    expect(find.textContaining('1 Lebensmittel läuft bald ab'), findsOneWidget);
+    expect(find.text('laufen bald ab'), findsOneWidget);
 
     // Generate suggestions.
     await tester.tap(find.text('Rezepte finden'));

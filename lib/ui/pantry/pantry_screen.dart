@@ -5,6 +5,8 @@ import '../../app.dart';
 import '../../l10n/strings.dart';
 import '../../logic/recipe_ranking.dart' show normalizeName;
 import '../../models/pantry_item.dart';
+import '../../state/food_log_store.dart';
+import '../../state/meal_plan_store.dart';
 import '../../state/pantry_store.dart';
 import '../../state/settings_store.dart';
 import '../recipes/recipes_screen.dart';
@@ -117,10 +119,11 @@ class _PantryScreenState extends State<PantryScreen> {
                 : ListView(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                     children: [
-                      if (expiring.isNotEmpty) ...[
-                        _ExpiringCard(count: expiring.length),
-                        const SizedBox(height: 12),
-                      ],
+                      _TodayHeader(
+                        pantryCount: items.length,
+                        expiringCount: expiring.length,
+                      ),
+                      const SizedBox(height: 12),
                       FilledButton.icon(
                         onPressed: () {
                           context.read<TabNavigator>().goTo(TabNavigator.recipes);
@@ -173,29 +176,97 @@ class _PantryScreenState extends State<PantryScreen> {
   }
 }
 
-class _ExpiringCard extends StatelessWidget {
-  const _ExpiringCard({required this.count});
-  final int count;
+/// Gradient overview at the top of the pantry: greeting, three key numbers
+/// and tonight's planned meal.
+class _TodayHeader extends StatelessWidget {
+  const _TodayHeader({required this.pantryCount, required this.expiringCount});
+  final int pantryCount;
+  final int expiringCount;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Card(
-      color: scheme.tertiaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Icon(Icons.recycling, color: scheme.onTertiaryContainer),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                context.s.expiringBanner(count),
-                style: TextStyle(color: scheme.onTertiaryContainer),
+    final s = context.s;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final now = DateTime.now();
+    final kcal = context
+        .select<FoodLogStore, double>((l) => l.totalsFor(now).calories)
+        .round();
+    final planned = context.select<MealPlanStore, String>(
+      (p) => p.entriesOn(now).map((e) => e.recipe.title).join(', '),
+    );
+    final greeting = now.hour < 11
+        ? s.goodMorning
+        : now.hour < 18
+            ? s.goodDay
+            : s.goodEvening;
+    final on = scheme.onPrimary;
+
+    Widget stat(String value, String label, {bool alert = false}) => Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: alert ? scheme.tertiaryContainer : on,
+                ),
               ),
-            ),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall
+                    ?.copyWith(color: on.withValues(alpha: 0.85)),
+              ),
+            ],
+          ),
+        );
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            scheme.primary,
+            Color.lerp(scheme.primary, scheme.tertiary, 0.45)!,
           ],
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            greeting,
+            style: theme.textTheme.titleLarge?.copyWith(color: on),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              stat('$pantryCount', s.statInPantry),
+              stat('$expiringCount', s.statExpiring, alert: expiringCount > 0),
+              stat('$kcal', s.statKcalToday),
+            ],
+          ),
+          if (planned.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Icon(Icons.event_note, size: 16, color: on),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    s.tonight(planned),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(color: on),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }

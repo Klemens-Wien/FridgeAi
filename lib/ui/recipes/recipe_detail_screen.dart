@@ -20,7 +20,9 @@ import '../../state/settings_store.dart';
 import '../../state/shopping_store.dart';
 import '../cooking/cooking_mode_screen.dart';
 import '../planner/add_to_plan_sheet.dart';
+import '../pro/pro_gate.dart';
 import '../widgets/common.dart';
+import '../widgets/recipe_art.dart';
 
 /// Builds shopping-list entries for [ingredients], scaled to [servings].
 List<ShoppingItem> shoppingItemsFor(
@@ -220,7 +222,19 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         children: [
-          Text(recipe.title, style: theme.textTheme.headlineSmall),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              RecipeArt(kind: recipe.kind, size: 76, radius: 20),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  recipe.title,
+                  style: theme.textTheme.headlineSmall,
+                ),
+              ),
+            ],
+          ),
           if (recipe.description.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
@@ -695,6 +709,7 @@ class _MissingSheetState extends State<_MissingSheet> {
   ClaudeException? _error;
 
   Future<void> _find() async {
+    if (!await ensurePro(context) || !mounted) return;
     final settings = context.read<SettingsStore>();
     final factory = context.read<AiServiceFactory>();
     final pantry = context.read<PantryStore>().items;

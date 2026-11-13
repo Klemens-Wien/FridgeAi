@@ -13,6 +13,27 @@ enum Difficulty {
       );
 }
 
+/// Rough dish type, used for the picture tile on recipe cards.
+enum RecipeKind {
+  pasta,
+  rice,
+  soup,
+  salad,
+  meat,
+  fish,
+  egg,
+  vegetable,
+  bread,
+  dessert,
+  breakfast,
+  other;
+
+  static RecipeKind parse(String? v) => RecipeKind.values.firstWhere(
+        (k) => k.name == v,
+        orElse: () => RecipeKind.other,
+      );
+}
+
 class RecipeIngredient {
   const RecipeIngredient({
     required this.name,
@@ -123,6 +144,7 @@ class Recipe {
     this.prepMinutes = 0,
     this.cookMinutes = 0,
     this.difficulty = Difficulty.medium,
+    this.kind = RecipeKind.other,
     this.vegetarian = false,
     this.vegan = false,
     this.glutenFree = false,
@@ -142,6 +164,7 @@ class Recipe {
   final int prepMinutes;
   final int cookMinutes;
   final Difficulty difficulty;
+  final RecipeKind kind;
   final bool vegetarian;
   final bool vegan;
   final bool glutenFree;
@@ -162,6 +185,7 @@ class Recipe {
         'prepMinutes': prepMinutes,
         'cookMinutes': cookMinutes,
         'difficulty': difficulty.name,
+        'kind': kind.name,
         'vegetarian': vegetarian,
         'vegan': vegan,
         'glutenFree': glutenFree,
@@ -184,6 +208,7 @@ class Recipe {
       prepMinutes: (json['prepMinutes'] as num?)?.toInt() ?? 0,
       cookMinutes: (json['cookMinutes'] as num?)?.toInt() ?? 0,
       difficulty: Difficulty.parse(json['difficulty'] as String?),
+      kind: RecipeKind.parse(json['kind'] as String?),
       // Vegan implies vegetarian, regardless of what the model said.
       vegetarian: vegan || (json['vegetarian'] as bool? ?? false),
       vegan: vegan,

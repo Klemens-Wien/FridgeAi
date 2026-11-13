@@ -223,6 +223,11 @@ void main() {
     await settings.setGroupPantry(true);
     await tester.pumpAndSettle();
     expect(find.text('Obst & Gemüse (6)'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Milchprodukte & Eier (1)'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Milchprodukte & Eier (1)'), findsOneWidget);
   });
 }

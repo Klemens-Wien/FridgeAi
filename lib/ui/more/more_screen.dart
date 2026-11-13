@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/strings.dart';
 import '../../state/food_log_store.dart';
+import '../../state/pro_store.dart';
 import '../../state/recipe_store.dart';
+import '../pro/pro_screen.dart';
 import '../calories/calorie_screen.dart';
 import 'own_recipes_screen.dart';
 import 'recipe_list_screen.dart';
@@ -17,6 +19,7 @@ class MoreScreen extends StatelessWidget {
     final s = context.s;
     final store = context.watch<RecipeStore>();
     final log = context.watch<FoodLogStore>();
+    final pro = context.watch<ProStore>();
     void push(Widget w) =>
         Navigator.push(context, MaterialPageRoute(builder: (_) => w));
 
@@ -60,6 +63,23 @@ class MoreScreen extends StatelessWidget {
             ),
           ),
           ListTile(
+            leading: Icon(
+              Icons.workspace_premium,
+              color: Theme.of(context).colorScheme.tertiary,
+            ),
+            title: Text(s.proTitle),
+            subtitle: Text(
+              pro.isPro
+                  ? s.proActive
+                  : s.freeRequestsLeft(
+                      pro.remainingToday,
+                      ProStore.freeDailyAiRequests,
+                    ),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => push(const ProScreen()),
+          ),
+          ListTile(
             leading: const Icon(Icons.local_fire_department_outlined),
             title: Text(s.calorieCounter),
             trailing: Text(
@@ -97,7 +117,7 @@ class MoreScreen extends StatelessWidget {
             onTap: () => showAboutDialog(
               context: context,
               applicationName: s.appName,
-              applicationVersion: '1.3.0',
+              applicationVersion: '1.4.0',
               applicationIcon: const Icon(Icons.kitchen, size: 40),
               children: [
                 Text(s.aboutBody),

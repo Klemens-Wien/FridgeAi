@@ -11,6 +11,7 @@ import '../../services/image_utils.dart';
 import '../../state/pantry_store.dart';
 import '../../state/recipe_store.dart';
 import '../../state/settings_store.dart';
+import '../pro/pro_gate.dart';
 import '../recipes/recipe_card.dart';
 import '../widgets/common.dart';
 
@@ -137,6 +138,7 @@ class _ImportSheetState extends State<_ImportSheet> {
       setState(() => _hint = s.importNeedsInput);
       return;
     }
+    if (!await ensurePro(context) || !mounted) return;
     final settings = context.read<SettingsStore>();
     final factory = context.read<AiServiceFactory>();
     final store = context.read<RecipeStore>();

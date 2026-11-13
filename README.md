@@ -31,6 +31,9 @@ Flutter-App für **iOS und Android**: Kühlschrank fotografieren, die KI (Claude
 | **Kalorienziel-Rechner** | Persönlicher Richtwert nach Mifflin-St-Jeor (Angaben werden nicht gespeichert). |
 | **Plan ↔ Kalorien** | Geplante Gerichte erscheinen im Kalorienzähler und lassen sich mit einem Tipp als gegessen eintragen; der Wochenplan zeigt die geplanten kcal pro Tag. |
 | **Häufige Mahlzeiten** | Oft Gegessenes mit einem Tipp erneut eintragen. |
+| **Pro-Version** | Kostenlos: 5 KI-Anfragen pro Tag. Pro: unbegrenzt, dazu Kassenbon-Scan, Rezept-Import, Ersatz-Vorschläge, KI-Kalorienschätzung und automatischer Wochenplan. Der Kauf ist noch nicht angebunden: `ProStore.setPro` wird derzeit per Schalter gesetzt und muss später aus dem Store-Kauf aufgerufen werden. |
+| **Automatischer Wochenplan** | (Pro) Füllt freie Abendessen der Woche mit Rezepten aus dem Vorrat, bald Ablaufendes zuerst. |
+| **Heute-Übersicht, Onboarding, Wasser-Zähler** | Übersicht im Vorrat, Einführung beim ersten Start, Gläser Wasser pro Tag im Kalorienzähler. |
 | **Darstellung** | Hell, Dunkel oder System (Material 3). Deutsch und Englisch (oder Systemsprache) – auch die KI antwortet in der gewählten Sprache. |
 
 Alle Daten bleiben lokal auf dem Gerät (SharedPreferences). Der API-Schlüssel liegt verschlüsselt im Keychain/Keystore.

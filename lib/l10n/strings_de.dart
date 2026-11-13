@@ -711,6 +711,140 @@ class StringsDe extends S {
   String get carbsShort => 'Kohlenh.';
 
   @override
+  String get proTitle =>
+      'FridgeChef Pro';
+  @override
+  String get proActive =>
+      'Pro ist aktiv';
+  @override
+  String get proTagline =>
+      'Mehr aus deinem Kühlschrank holen';
+  @override
+  String get proUnlimited =>
+      'Unbegrenzte KI-Anfragen';
+  @override
+  String get proUnlimitedSub =>
+      'Scannen und Rezepte vorschlagen, so oft du willst';
+  @override
+  String get proWeekPlan =>
+      'Automatischer Wochenplan';
+  @override
+  String get proWeekPlanSub =>
+      'Die KI plant deine Abendessen aus dem Vorrat';
+  @override
+  String get proReceipt =>
+      'Kassenbon-Scan';
+  @override
+  String get proReceiptSub =>
+      'Einkäufe per Foto in den Vorrat';
+  @override
+  String get proImport =>
+      'Eigene Rezepte importieren';
+  @override
+  String get proImportSub =>
+      'Aus Text oder Kochbuch-Foto';
+  @override
+  String get proEstimate =>
+      'KI-Kalorienschätzung';
+  @override
+  String get proEstimateSub =>
+      'Mahlzeit beschreiben oder fotografieren';
+  @override
+  String get proSubstitutes =>
+      'Ersatz für fehlende Zutaten';
+  @override
+  String get proSubstitutesSub =>
+      'Alternativen aus deinem Vorrat';
+  @override
+  String get proUnlock =>
+      'Pro freischalten';
+  @override
+  String get proUnlockNote =>
+      'In dieser Vorschau kostenlos – es wird nichts abgebucht. Der Kauf über den App Store folgt.';
+  @override
+  String get proDeactivate =>
+      'Zur kostenlosen Version wechseln';
+  @override
+  String get proFeatureLocked =>
+      'Das ist eine Pro-Funktion.';
+  @override
+  String get proLimitReached =>
+      'Dein Tageslimit an kostenlosen KI-Anfragen ist erreicht.';
+  @override
+  String get proWelcome =>
+      'Willkommen bei Pro!';
+  @override
+  String get freePlan =>
+      'Kostenlose Version';
+  @override
+  String get autoPlanWeek =>
+      'Woche automatisch planen';
+  @override
+  String get autoPlanning =>
+      'Plane deine Woche …';
+  @override
+  String get autoPlanFull =>
+      'In dieser Woche sind alle Abendessen schon geplant.';
+  @override
+  String get water =>
+      'Wasser';
+  @override
+  String get onboardingSkip =>
+      'Überspringen';
+  @override
+  String get onboardingStart =>
+      "Los geht's";
+  @override
+  String get onb1Title =>
+      'Kühlschrank fotografieren';
+  @override
+  String get onb1Body =>
+      'Die KI erkennt deine Lebensmittel – oder du scannst einfach den Kassenbon.';
+  @override
+  String get onb2Title =>
+      'Kochen, was da ist';
+  @override
+  String get onb2Body =>
+      'Rezepte, die möglichst viel aus deinem Vorrat nutzen und bald Ablaufendes zuerst verwerten.';
+  @override
+  String get onb3Title =>
+      'Planen und im Blick behalten';
+  @override
+  String get onb3Body =>
+      'Wochenplan, Einkaufsliste und Kalorienzähler arbeiten zusammen.';
+  @override
+  String get todayTitle =>
+      'Heute';
+  @override
+  String get statInPantry =>
+      'im Vorrat';
+  @override
+  String get statExpiring =>
+      'laufen bald ab';
+  @override
+  String get statKcalToday =>
+      'kcal heute';
+  @override
+  String get goodMorning =>
+      'Guten Morgen';
+  @override
+  String get goodDay =>
+      'Hallo';
+  @override
+  String get goodEvening =>
+      'Guten Abend';
+  @override
+  String freeRequestsLeft(int left, int total) =>
+      'Heute noch $left von $total KI-Anfragen frei';
+  @override
+  String autoPlanDone(int n) =>
+      n == 1 ? '1 Abendessen geplant' : '$n Abendessen geplant';
+  @override
+  String waterGlasses(int n, int goal) => '$n von $goal Gläsern';
+  @override
+  String tonight(String title) => 'Heute geplant: $title';
+
+  @override
   String get errorTitle => 'Das hat nicht geklappt';
   @override
   String errorMessage(ClaudeErrorKind kind) => switch (kind) {
